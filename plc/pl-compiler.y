@@ -61,6 +61,7 @@ char *name;
 %token IF ELSE SWITCH CASE BREAK DEFAULT
 %token NUM
 %token INCLUDE
+%token TRUE FALSE
 %right ASGN 
 %left LOR
 %left LAND
@@ -117,6 +118,7 @@ EXP 			: EXP LT{push();} EXP {codegen_logical();}
 				| '(' EXP ')'
 				| ID {check();push();}
 				| NUM {push();}
+				| TRUE {push();}
 				;
 
 

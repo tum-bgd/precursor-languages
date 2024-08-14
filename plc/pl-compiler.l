@@ -18,6 +18,8 @@ digit [0-9]
 "while"	return WHILE;
 "switch"	return SWITCH;
 "default" return DEFAULT;
+"true"	return TRUE;
+"false"	return FALSE;
 "if"	return IF;
 "else"	return ELSE;
 ^"#include ".+ ;

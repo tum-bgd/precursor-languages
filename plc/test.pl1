@@ -1,0 +1,7 @@
+
+void main(){
+   move(); // this will move our robot.
+   while (true){
+   move();
+  }
+}
