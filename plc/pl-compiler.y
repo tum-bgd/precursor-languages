@@ -326,8 +326,12 @@ void while_start()
 void while_rep()
 {
 	lnum++;
-	fprintf(f1, "BLOAD %s\n",st[top]);
-	fprintf(f1, "JUMP_IFNOT $L%d \n",lnum);
+	if (strcmp(st[top],"true") == 0){
+
+	}else{
+	   fprintf(f1, "CMP %s\n",st[top]);
+	   fprintf(f1, "JZ $L%d \n",lnum);
+	}
 // 	fprintf(f1,"if( not %s)",st[top]);
 // 	fprintf(f1,"\tgoto $L%d\n",lnum);
  	label[++ltop]=lnum;
@@ -338,7 +342,8 @@ void while_end()
 	y=label[ltop--];
 	x=label[ltop--];
 	fprintf(f1,"JMP $L%d\n",x);
-	fprintf(f1,"$L%d: \n",y);
+	if(strcmp(st[top],"true") != 0)
+            fprintf(f1,"$L%d: \n",y);
 	top--;
 }
 void switch_start()
