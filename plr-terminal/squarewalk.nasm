@@ -1,0 +1,5 @@
+$L1:
+MOVE
+MOVE
+TURN
+JMP $L1

@@ -1,7 +1,7 @@
 
 void main(){
-   move(); // this will move our robot.
-   while (true){
-   move();
+  while(true){
+    if(front_blocked)
+      break;
   }
 }

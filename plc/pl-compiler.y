@@ -422,8 +422,10 @@ void check()
 			break;
 		}
 	}
-	// PL1 builtins
+	// PL builtins
 	if (strcmp("front_clear",temp) == 0)
+	    flag=1;
+	if (strcmp("front_blocked",temp) == 0)
 	    flag=1;
 	
 

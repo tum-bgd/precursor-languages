@@ -32,8 +32,10 @@ void enableRawMode() {
 }
 
 void cls(){
+#ifndef DEBUG
    fputs("\033[2J",stdout);
    fflush(stdout);
+#endif
 }
 
 enum {
@@ -137,7 +139,7 @@ void load(std::string filename)
 	if (str.size() > 0)
                 source.push_back(str);
     }
-  std::cout << "Read a file with " << source.size() << " lines" << std::endl;
+  std::cout << "Read a file with " << source.size() << " lines" << std::endl;  
 }
 
 /*load a world*/
@@ -177,12 +179,22 @@ int vm(){
   {
      // fetch a line
      if (pc < 0 || pc >= source.size()){
-	std::cout << "Program Counter (Line Pointer) outside source! Exit..." << std::endl;
+	std::cout << "Program Counter (Line Pointer) outside source! Exit... (pc=" << pc <<")" << std::endl;
 	return step_counter;
      }
      std::string line = source[pc];
      pc ++;
-
+     if (line.rfind("JMP",0)==0){
+        auto label=line.substr(4);
+	label += ":";
+	for (size_t i=0; i < source.size(); i++)
+	  if (label == source[i])
+	  {
+	      pc=i+1; // skip label
+	  }
+     }
+    
+    
      if (line.rfind("MOVE",0)==0)
        if (!move())
        {
