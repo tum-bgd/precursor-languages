@@ -1,0 +1,14 @@
+/*
+    Walks infinitely independent start
+    location.
+*/
+void main(){  
+  while (true){
+    if (front_blocked)
+    {
+       turn();
+       continue;  
+    }
+    move();
+  }
+}
