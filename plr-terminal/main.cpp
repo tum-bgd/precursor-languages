@@ -100,6 +100,21 @@ void turn(){
    niki_o = (niki_o +1) % MAX_ORIENTATION;
 }
 
+bool occupied(int orientation){
+    int x = niki_x, y = niki_y;
+    switch(orientation){
+      case LEFT: x --; break;
+      case RIGHT: x ++; break;
+      case UP: y --; break;
+      case DOWN: y ++; break;
+    }
+    if (world.size() != 0)
+      if (world[y][x] != ' ')
+        return true; // occupied
+    return false; // default non-occup
+    
+}
+
 bool move(){
     trace.push_back("MOVE");
    if (pTrace != NULL)
@@ -174,7 +189,8 @@ void load_world(std::string filename)
 // the fetch loop (e.g., virtual machine)
 int vm(){
   int pc=0; // initialize at line 0
-  int step_counter = 0; 
+  int step_counter = 0;
+  bool cpu_flag=false; // jumps depend on this
   while(true)
   {
      // fetch a line
@@ -183,8 +199,23 @@ int vm(){
 	return step_counter;
      }
      std::string line = source[pc];
+     #ifdef DEBUG
+     std::cout << "Executing <" << line << ">" << std::endl;
+     #endif
      pc ++;
      if (line.rfind("JMP",0)==0){
+        auto label=line.substr(4);
+	label += ":";
+	std::cout << "JUMPING TO: <" << label<<">" << std::endl;
+	for (size_t i=0; i < source.size(); i++)
+	  if (label == source[i])
+	  {
+	      pc=i+1; // skip label
+	  }
+     }
+     if (line.rfind("JNZ",0)==0){
+        if (cpu_flag != 0) //JNZ
+	{
         auto label=line.substr(4);
 	label += ":";
 	for (size_t i=0; i < source.size(); i++)
@@ -192,9 +223,21 @@ int vm(){
 	  {
 	      pc=i+1; // skip label
 	  }
+	  }
      }
-    
-    
+     if (line.rfind("JZ",0)==0){
+        if (cpu_flag == 0) //JZ
+	{
+	auto label=line.substr(3);
+	label += ":";
+        std::cout << "JZ TO: <" << label<<">" << std::endl;
+	for (size_t i=0; i < source.size(); i++)
+	  if (label == source[i])
+	  {
+	      pc=i+1; // skip label
+	  }
+	  }
+     }
      if (line.rfind("MOVE",0)==0)
        if (!move())
        {
@@ -207,6 +250,11 @@ int vm(){
      {
 	std::cout << "Machine stopped after " << step_counter << " instructions." << std::endl;
 	return step_counter;
+     }
+     if (line.rfind("LOADFB",0)==0)
+     {
+        cpu_flag=occupied(niki_o); // in niki_o
+	std::cout << "Loading Sensor front_blocked: " << cpu_flag << std::endl; 
      }
      step_counter ++;
      draw_arena();

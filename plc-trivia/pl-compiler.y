@@ -50,11 +50,54 @@ char *buffers[10000]; // maximal program length 10k
 int buffer_top=0;
 int lno=0;
 
+
+
+/*Some utilities*/
+
+
 char *_alloc(size_t n){
     buffers[buffer_top++] = (char *) malloc(n);
     // TODO: abort out of mem in both pointers and...
     printf("Allocated %d slot %d", n, buffer_top-1);
 }
+
+char *_str_replace(char *haystack, char *needle, char *replacement, int *replaced){
+    char *p=strstr(haystack, needle);
+    if (p != NULL){
+        int len = strlen(haystack) + strlen(replacement); // could be tighter, but we dont need it tight
+	char *ret = (char*) malloc(len);
+	strncpy(ret,haystack, (int) (p - haystack));
+	strcat(ret,replacement);
+	strcat(ret,(char *) (p+strlen(needle)));
+	*replaced = 1; // we did replace
+	return ret;
+
+    }else{
+	*replaced=0;
+        return haystack;
+    }
+
+}
+
+char *str_replace(char *haystack, char *needle, char *replacement){
+    if (haystack == NULL || needle == NULL || replacement == NULL)
+      return NULL;
+    // create a working copy
+    char *working_copy = (char *) malloc(strlen(haystack) +1);
+    strcpy(working_copy,haystack); 
+    int replaced=1;
+    while (replaced){
+        char *p = _str_replace(working_copy, needle, replacement, &replaced);
+	if (replaced){
+	    // new buffer allocated, take ownership
+	    free(working_copy);
+	    working_copy = p; 
+	}
+    }
+    return working_copy;
+}
+
+
 
 char *cg_call(char *name){
    assert(name != NULL);
@@ -82,11 +125,32 @@ char *cg_sequential(char *left, char *right){
 
 char *cg_while(char *exp, char *body){
    assert(exp != NULL && body != NULL);
+   int start_label,end_label;
    int len = 1024+strlen(exp)+strlen(body);
    printf("CG_WHILE for %s and %s",exp,body);
    char *ret = malloc(len);
-   if (strcmp(exp, "true")== 0) { // special in pl1  
-      snprintf(ret,len, "L%d:\n%sJMP L%d\n", lno++,body, lno);
+   if (strcmp(exp, "true")== 0) { // special in pl1
+       start_label = lno++;
+       end_label = lno++;
+      snprintf(ret,len, "L%d:\n%sJMP L%d\nL%d:\n", start_label,body, start_label,end_label);
+   }
+   /*IF THERE IS A BREAK, replace it with JMP */
+   char jumpcommand[15];
+   snprintf(jumpcommand,15,"JMP L%d",end_label);
+   char *ret2 = str_replace(ret, "BREAK",jumpcommand);
+   free(ret);
+   return ret2;
+}
+
+char *cg_if (char *exp, char *body){
+   assert(exp!= NULL && body != NULL);
+   int len=1024+strlen(body);
+printf("CG_IF for %s and %s",exp,body);
+   char *ret = malloc(len);
+   if (strcmp(exp, "front_blocked")== 0) { // special var  
+      snprintf(ret,len, "LOADFB\nJZ L%d\n%sL%d:\n", lno++,body, lno);
+   }else{
+	printf("OOPS. If does not support expressions yet"); exit(-1);
    }
    return ret;
 }
@@ -124,7 +188,7 @@ char *name;
 %nonassoc IFX IFX1
 %nonassoc ELSE
 
-%type <name> STMT_CALL STMT STMT1 STMTS STMT_WHILE WHILEBODY
+%type <name> STMT_CALL STMT STMT1 STMTS STMT_WHILE WHILEBODY STMT_IF
 
 %%
 
@@ -139,10 +203,12 @@ STMT1			: STMT  STMT1 {$$=cg_sequential($1,$2);}
 
 STMT 			: /*STMT_DECLARE    //all types of statements
 				| STMT_ASSGN  
-				| STMT_IF
-				*/ STMT_WHILE {$$=$1;}  /*
+				|*/ STMT_IF {$$ = $1;}
+				 | STMT_WHILE {$$=$1;}  /*
 				| STMT_SWITCH
+                                 
 			*/	 | STMT_CALL {$$ = $1;}
+			         | BREAK {$$=strdup("BREAK\n");}
 				| ';' {$$= strdup("");}
 				;
 
@@ -170,7 +236,8 @@ EXP 			: EXP LT{push();} EXP {codegen_logical();}
 				;
 
 
-STMT_IF 			: IF '(' EXP ')'  {if_label1();} STMTS ELSESTMT 
+STMT_IF 			: IF '(' ID ')'  STMTS {$$ = cg_if($3,$5);}
+                                 |IF '(' ID ')'  STMT {$$ = cg_if($3,$5);}
 				;
 ELSESTMT		: ELSE {if_label2();} STMTS {if_label3();}
 				| {if_label3();}
@@ -262,7 +329,7 @@ int main(int argc, char *argv[])
             perror("File open");
             exit(-1);
         }
-	f1=fopen("output","w");
+	f1=fopen("output.trash","w");
 	
    if(!yyparse())
 		printf("\nParsing complete\n");
@@ -276,12 +343,16 @@ int main(int argc, char *argv[])
 	if (final == NULL){
 	  printf("NULL pointer\n");
 	  }else{
-	  printf("%s\n",final);
+	     FILE *f = fopen("output.nasm","w");
+	     fprintf(f,"%s\n",final);
+	     fprintf(f,"HALT\n"); // end of code
+	     fclose(f);
+	     printf("%s\n",final);
 	  }
 	
 	fclose(yyin);
 	fclose(f1);
-	intermediateCode();
+//	intermediateCode();
     return 0;
 }
          

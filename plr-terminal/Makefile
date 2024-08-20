@@ -1,2 +1,2 @@
 all:
-	g++ -o plr main.cpp
+	g++ -DDEBUG -o plr main.cpp
