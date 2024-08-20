@@ -110,10 +110,24 @@ bool occupied(int orientation){
       case DOWN: y ++; break;
     }
     if (world.size() != 0)
-      if (world[y][x] != ' ')
+      if (world[y][x] != ' ' && world[y][x] != '*')
         return true; // occupied
     return false; // default non-occup
     
+}
+bool pick(){
+  if (world[niki_y][niki_x] == '*'){
+    world[niki_y][niki_x] = ' ';
+    return true;
+  }else
+    return false;
+}
+bool deposit(){
+  if (world[niki_y][niki_x] == ' '){
+    world[niki_y][niki_x] = '*';
+    return true;
+  }else
+    return false;
 }
 
 bool move(){
@@ -133,7 +147,7 @@ bool move(){
 	  std::cout << "Maze solved by finding an X in " << trace.size() << "steps" << std::endl;
 	  exit (0);
       }
-      if (world[niki_y][niki_x] != ' ') // bounds check!
+      if (world[niki_y][niki_x] != ' ' && world[niki_y][niki_x] != '*') // bounds check!
         return false;
     }
     return true;
@@ -245,6 +259,18 @@ int vm(){
 	  std::cout << "Collision" << std::endl;
 	  exit (-1);
        }; // add boolean check
+     if (line.rfind("PICK",0)==0)
+       if (!pick())
+       {
+	  std::cout << "Pick failed" << std::endl;
+	  exit (-1);
+       }; // add boolean check
+     if (line.rfind("DEPO",0)==0)
+       if (!deposit())
+       {
+	  std::cout << "Deposit failed" << std::endl;
+	  exit (-1);
+       }; 
      if (line.rfind("TURN",0)==0)
        turn(); 
      if (line.rfind("HALT",0)==0)
@@ -255,6 +281,11 @@ int vm(){
      if (line.rfind("LOADFB",0)==0)
      {
         cpu_flag=occupied(niki_o); // in niki_o
+	std::cout << "Loading Sensor front_blocked: " << cpu_flag << std::endl; 
+     }
+     if (line.rfind("LOADHI",0)==0)
+     {
+        cpu_flag=(world[niki_y][niki_x] == '*'); // in niki_o
 	std::cout << "Loading Sensor front_blocked: " << cpu_flag << std::endl; 
      }
      step_counter ++;
@@ -290,6 +321,11 @@ int niki_interactive(){
 	              break;
 	    case 't': turn();
 	              break;
+	    case 'p': if (!pick()) die("Niki tried to pick, but there was nothing.");;
+	              break;
+	    case 'd': if (!deposit()) die("Niki tried to deposit, but the cell was nonempty");;
+	              break;
+		     
 
       }
  
