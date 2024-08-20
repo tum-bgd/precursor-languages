@@ -43,6 +43,7 @@ enum {
 }Orientation;
 
 int niki_x, niki_y, niki_o;
+int step_limit=0;
 std::vector<std::string> world;
 std::vector<std::string> source;
 std::ofstream *pTrace=NULL;
@@ -257,6 +258,10 @@ int vm(){
 	std::cout << "Loading Sensor front_blocked: " << cpu_flag << std::endl; 
      }
      step_counter ++;
+     if (step_limit != 0 && step_counter >= step_limit){
+	  std::cout << "Maximal steps reached. Exiting" << std::endl;
+	  exit (4);
+     }
      draw_arena();
      wait();
 
@@ -299,9 +304,12 @@ int main(int argc, char **argv)
   bool interactive = false;
  std::string filename(""),worldname("");
   char c;
-  while ((c = getopt (argc, argv, "if:w:t:")) != -1)
+  while ((c = getopt (argc, argv, "if:w:t:l:")) != -1)
     switch (c)
       {
+      case 'l':
+        step_limit = std::atoi(optarg);
+	break;
       case 'i':
         interactive=true;
         break;
@@ -336,7 +344,7 @@ int main(int argc, char **argv)
       return niki_interactive();
    if (filename == "")
    {
-       std::cerr << "use -i for interactive or -f for running a file!" << std::endl;
+       std::cerr << "use -i for interactive or -f for running a file, -t for writing a trace and -l for imposing a step limit" << std::endl;
        return -1;
    }
 

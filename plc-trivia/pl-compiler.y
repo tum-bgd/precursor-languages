@@ -136,10 +136,20 @@ char *cg_while(char *exp, char *body){
    }
    /*IF THERE IS A BREAK, replace it with JMP */
    char jumpcommand[15];
+   char *ret2;
    snprintf(jumpcommand,15,"JMP L%d",end_label);
-   char *ret2 = str_replace(ret, "BREAK",jumpcommand);
+   ret2 = str_replace(ret, "BREAK",jumpcommand);
    free(ret);
-   return ret2;
+   ret = ret2;
+   /*IF THERE IS A CONT, replace it with JMP */
+   snprintf(jumpcommand,15,"JMP L%d",start_label);
+   ret2 = str_replace(ret, "CONT",jumpcommand);
+   free(ret);
+   ret = ret2;
+
+   // done
+
+   return ret;
 }
 
 char *cg_if (char *exp, char *body){
@@ -169,7 +179,7 @@ char *name;
 
 %token INT VOID UINT
 %token WHILE 
-%token IF ELSE SWITCH CASE BREAK DEFAULT
+%token IF ELSE SWITCH CASE BREAK DEFAULT CONTINUE
 %token NUM
 %token INCLUDE
 %token  FALSE
@@ -208,7 +218,8 @@ STMT 			: /*STMT_DECLARE    //all types of statements
 				| STMT_SWITCH
                                  
 			*/	 | STMT_CALL {$$ = $1;}
-			         | BREAK {$$=strdup("BREAK\n");}
+			         | BREAK ';' {$$=strdup("BREAK\n");}
+				 | CONTINUE ';' {$$=strdup("CONT\n");}
 				| ';' {$$= strdup("");}
 				;
 
@@ -414,6 +425,12 @@ void codegen_call(){
     }else if (strcmp(st[top],"turn") == 0)
     {
 	fprintf(f1,"TURN\n", st[top]);
+    }else if (strcmp(st[top],"deposit") == 0)
+    {
+	fprintf(f1,"DEPO\n", st[top]);
+    }else if (strcmp(st[top],"pickup") == 0)
+    {
+	fprintf(f1,"PICK\n", st[top]);
     }else {
        // Calling possible only in PL level > 3
 	fprintf(f1,"CALL @%s\n", st[top]);
