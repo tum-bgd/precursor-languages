@@ -109,6 +109,12 @@ char *cg_call(char *name){
    }else if (strcmp(name, "turn") == 0)
    {
       snprintf(ret,1024, "TURN\n");
+   }else if (strcmp(name, "pick") == 0)
+   {
+      snprintf(ret,1024, "PICK\n");
+   }else if (strcmp(name, "deposit") == 0)
+   {
+      snprintf(ret,1024, "DEPOSIT\n");
    }else
       snprintf(ret,1024, "CALL @%s\n", name);
    return ret;
@@ -159,6 +165,8 @@ printf("CG_IF for %s and %s",exp,body);
    char *ret = malloc(len);
    if (strcmp(exp, "front_blocked")== 0) { // special var  
       snprintf(ret,len, "LOADFB\nJZ L%d\n%sL%d:\n", lno++,body, lno);
+   }else    if (strcmp(exp, "has_item")== 0) { // special var  
+      snprintf(ret,len, "LOADHI\nJZ L%d\n%sL%d:\n", lno++,body, lno);
    }else{
 	printf("OOPS. If does not support expressions yet"); exit(-1);
    }
