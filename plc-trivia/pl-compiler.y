@@ -129,6 +129,20 @@ char *cg_sequential(char *left, char *right){
    return ret;
 }
 
+char *cg_loadport(char *id){
+  char *ret = (char*)malloc(100);
+  if (strcmp(id, "front_blocked")== 0) { // special var  
+      strncpy(ret, "LOADFB\n",100);
+   }else if (strcmp(id, "has_item")== 0) { // special var  
+      strncpy(ret, "LOADHI\n",100);
+   }else{
+      printf("Unknown identifier: %s\n",id);
+      exit(-5);
+   }
+
+   return ret;
+}
+
 char *cg_while(char *exp, char *body){
    assert(exp != NULL && body != NULL);
    int start_label,end_label;
@@ -139,7 +153,19 @@ char *cg_while(char *exp, char *body){
        start_label = lno++;
        end_label = lno++;
       snprintf(ret,len, "L%d:\n%sJMP L%d\nL%d:\n", start_label,body, start_label,end_label);
+   }else{
+     // exp is code that evaluates and sets the CPU flags
+     // as we do not have numbers in Niki, logical ops just need to store the result in the cpu flag
+     // as we finally need to negate it for the jump, we should add a NOT, but we flip the jump
+      start_label = lno++;
+      end_label = lno++;
+      snprintf(ret,len, "L%d:\n%sJZ L%d\n%sJMP L%d\nL%d:\n", start_label,exp,end_label,body, start_label,end_label);
+     
+
+
    }
+
+   
    /*IF THERE IS A BREAK, replace it with JMP */
    char jumpcommand[15];
    char *ret2;
@@ -206,7 +232,7 @@ char *name;
 %nonassoc IFX IFX1
 %nonassoc ELSE
 
-%type <name> STMT_CALL STMT STMT1 STMTS STMT_WHILE WHILEBODY STMT_IF
+%type <name> STMT_CALL STMT STMT1 STMTS STMT_WHILE WHILEBODY STMT_IF EXP
 
 %%
 
@@ -233,7 +259,11 @@ STMT 			: /*STMT_DECLARE    //all types of statements
 
 				
 
-EXP 			: EXP LT{push();} EXP {codegen_logical();}
+EXP 			:     ID {$$ = cg_loadport($1);} |
+                              TRUE {$$=strdup("true");}
+			      | FALSE {$$=strdup("false");};
+/*			
+/*EXP LT{push();} EXP {codegen_logical();}
 				| EXP LE{push();} EXP {codegen_logical();}
 				| EXP GT{push();} EXP {codegen_logical();}
 				| EXP GE{push();} EXP {codegen_logical();}
@@ -249,9 +279,8 @@ EXP 			: EXP LT{push();} EXP {codegen_logical();}
 				| EXP {push();} BXOR EXP {codegen_logical();}
 				| EXP {push();} BAND EXP {codegen_logical();}
 				| '(' EXP ')'
-				| ID {check();push();}
 				| NUM {push();}
-				| TRUE {push();}
+				| TRUE {push();}*/
 				;
 
 
@@ -288,7 +317,7 @@ SWITCHEXP 		: STMTS
 				;
 
 
-STMT_WHILE		: WHILE '(' TRUE ')' WHILEBODY  { $$ = cg_while($3,$5);};
+STMT_WHILE		: WHILE '(' EXP ')' WHILEBODY  { $$ = cg_while($3,$5);};
 
 WHILEBODY		: STMTS { $$ = $1; }
 				| STMT  {$$ = $1;}
