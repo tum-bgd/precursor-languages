@@ -226,6 +226,7 @@ int vm(){
      #endif
      pc ++;
      if (line.rfind("JMP",0)==0){
+        bool found=false;
         auto label=line.substr(4);
 	label += ":";
 	#ifdef DEBUG
@@ -235,30 +236,46 @@ int vm(){
 	  if (label == source[i])
 	  {
 	      pc=i+1; // skip label
+	      found = true;
+	  }
+	  if (!found){
+	    std::cout << "Jump to invalid label: " << label <<std::endl;
+	    exit(-1);
 	  }
      }
      if (line.rfind("JNZ",0)==0){
         if (cpu_flag != 0) //JNZ
 	{
+	  bool found=false;
         auto label=line.substr(4);
 	label += ":";
 	for (size_t i=0; i < source.size(); i++)
 	  if (label == source[i])
 	  {
-	      pc=i+1; // skip label
+	      pc=i+1;found=true; // skip label
 	  }
+       	  if (!found){
+	    std::cout << "Jump to invalid label: " << label <<std::endl;
+	    exit(-1);
+	  }
+
 	  }
      }
      if (line.rfind("JZ",0)==0){
         if (cpu_flag == 0) //JZ
 	{
+	  bool found=false;
 	auto label=line.substr(3);
 	label += ":";
         //std::cout << "JZ TO: <" << label<<">" << std::endl;
 	for (size_t i=0; i < source.size(); i++)
 	  if (label == source[i])
 	  {
-	      pc=i+1; // skip label
+	      pc=i+1; found=true;// skip label
+	  }
+       	  if (!found){
+	    std::cout << "Jump to invalid label: " << label <<std::endl;
+	    exit(-1);
 	  }
 	  }
      }

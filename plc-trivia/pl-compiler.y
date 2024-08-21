@@ -160,10 +160,7 @@ char *cg_while(char *exp, char *body){
       start_label = lno++;
       end_label = lno++;
       snprintf(ret,len, "L%d:\n%sJZ L%d\n%sJMP L%d\nL%d:\n", start_label,exp,end_label,body, start_label,end_label);
-     
-
-
-   }
+    }
 
    
    /*IF THERE IS A BREAK, replace it with JMP */
@@ -186,16 +183,17 @@ char *cg_while(char *exp, char *body){
 
 char *cg_if (char *exp, char *body){
    assert(exp!= NULL && body != NULL);
-   int len=1024+strlen(body);
-printf("CG_IF for %s and %s",exp,body);
+   int len=30+strlen(exp)+strlen(body);
+   printf("CG_IF for %s and %s",exp,body);
    char *ret = malloc(len);
-   if (strcmp(exp, "front_blocked")== 0) { // special var  
+   /*if (strcmp(exp, "front_blocked")== 0) { // special var  
       snprintf(ret,len, "LOADFB\nJZ L%d\n%sL%d:\n", lno++,body, lno);
    }else    if (strcmp(exp, "has_item")== 0) { // special var  
       snprintf(ret,len, "LOADHI\nJZ L%d\n%sL%d:\n", lno++,body, lno);
    }else{
 	printf("OOPS. If does not support expressions yet"); exit(-1);
-   }
+   }*/
+   snprintf(ret,len,"%sJZ L%d\n%sL%d:\n",exp,lno++,body,lno);
    return ret;
 }
 
@@ -260,7 +258,7 @@ STMT 			: /*STMT_DECLARE    //all types of statements
 				
 
 EXP 			:     ID {$$ = cg_loadport($1);} |
-                              TRUE {$$=strdup("true");}
+                              TRUE {$$=strdup("true");}  // TODO: LDTRUE
 			      | FALSE {$$=strdup("false");};
 /*			
 /*EXP LT{push();} EXP {codegen_logical();}
@@ -284,8 +282,8 @@ EXP 			:     ID {$$ = cg_loadport($1);} |
 				;
 
 
-STMT_IF 			: IF '(' ID ')'  STMTS {$$ = cg_if($3,$5);}
-                                 |IF '(' ID ')'  STMT {$$ = cg_if($3,$5);}
+STMT_IF 			: IF '(' EXP ')'  STMTS {$$ = cg_if($3,$5);}
+                                 |IF '(' EXP ')'  STMT {$$ = cg_if($3,$5);}
 				;
 ELSESTMT		: ELSE {if_label2();} STMTS {if_label3();}
 				| {if_label3();}
