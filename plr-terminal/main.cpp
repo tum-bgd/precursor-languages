@@ -17,6 +17,8 @@ Implementation for VT100 Terminals.
 /* Linux Interactive*/
 
 
+
+
 #include <termios.h>
 struct termios orig_termios;
 void disableRawMode() {
@@ -100,6 +102,12 @@ void turn(){
       (*pTrace) << "TURN" << std::endl;
    niki_o = (niki_o +1) % MAX_ORIENTATION;
 }
+bool walkable(int y,int x){
+  char ch = world[y][x];
+  if (ch == ' ' || ch == '*' || ch == 'X')
+    return true;
+  return false;
+}
 
 bool occupied(int orientation){
     int x = niki_x, y = niki_y;
@@ -110,7 +118,7 @@ bool occupied(int orientation){
       case DOWN: y ++; break;
     }
     if (world.size() != 0)
-      if (world[y][x] != ' ' && world[y][x] != '*')
+      if (!walkable(y,x))
         return true; // occupied
     return false; // default non-occup
     
@@ -129,7 +137,6 @@ bool deposit(){
   }else
     return false;
 }
-
 bool move(){
     trace.push_back("MOVE");
    if (pTrace != NULL)
@@ -147,7 +154,7 @@ bool move(){
 	  std::cout << "Maze solved by finding an X in " << trace.size() << "steps" << std::endl;
 	  exit (0);
       }
-      if (world[niki_y][niki_x] != ' ' && world[niki_y][niki_x] != '*') // bounds check!
+      if (!walkable(niki_y,niki_x)) // bounds check!
         return false;
     }
     return true;
@@ -221,7 +228,9 @@ int vm(){
      if (line.rfind("JMP",0)==0){
         auto label=line.substr(4);
 	label += ":";
+	#ifdef DEBUG
 	std::cout << "JUMPING TO: <" << label<<">" << std::endl;
+	#endif
 	for (size_t i=0; i < source.size(); i++)
 	  if (label == source[i])
 	  {
@@ -245,7 +254,7 @@ int vm(){
 	{
 	auto label=line.substr(3);
 	label += ":";
-        std::cout << "JZ TO: <" << label<<">" << std::endl;
+        //std::cout << "JZ TO: <" << label<<">" << std::endl;
 	for (size_t i=0; i < source.size(); i++)
 	  if (label == source[i])
 	  {
@@ -281,12 +290,12 @@ int vm(){
      if (line.rfind("LOADFB",0)==0)
      {
         cpu_flag=occupied(niki_o); // in niki_o
-	std::cout << "Loading Sensor front_blocked: " << cpu_flag << std::endl; 
+	//std::cout << "Loading Sensor front_blocked: " << cpu_flag << std::endl; 
      }
      if (line.rfind("LOADHI",0)==0)
      {
         cpu_flag=(world[niki_y][niki_x] == '*'); // in niki_o
-	std::cout << "Loading Sensor front_blocked: " << cpu_flag << std::endl; 
+	//std::cout << "Loading Sensor front_blocked: " << cpu_flag << std::endl; 
      }
      step_counter ++;
      if (step_limit != 0 && step_counter >= step_limit){
@@ -294,6 +303,7 @@ int vm(){
 	  exit (4);
      }
      draw_arena();
+     fflush(stdout);
      wait();
 
   }
