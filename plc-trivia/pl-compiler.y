@@ -198,6 +198,27 @@ char *cg_if (char *exp, char *body){
 }
 
 
+char *cg_if_else (char *exp, char *body, char *elsecode){
+   assert(exp!= NULL && body != NULL && elsecode != NULL);
+   int len=60+strlen(exp)+strlen(body)+strlen(elsecode);
+   printf("CG_IFELSE for %s and %s %s",exp,body,elsecode);
+   char *ret = malloc(len);
+   /*
+    (exp)
+    JZ L0
+       (body)
+       JMP OUT
+    L0
+       (else)
+    LOUT
+   */
+   int label_else = lno++;
+   int label_out = lno++;
+   snprintf(ret,len,"%sJZ L%d\n%sJMP L%d\nL%d:\n%sL%d:\n",exp,label_else,body,label_out,label_else,elsecode,label_out );
+   return ret;
+}
+
+
 %}
 
 %union{
@@ -282,8 +303,13 @@ EXP 			:     ID {$$ = cg_loadport($1);} |
 				;
 
 
-STMT_IF 			: IF '(' EXP ')'  STMTS {$$ = cg_if($3,$5);}
+STMT_IF 			:IF '(' EXP ')'  STMT ELSE STMT {$$ = cg_if_else($3,$5,$7);}
+				 |IF '(' EXP ')'  STMTS ELSE STMT {$$ = cg_if_else($3,$5,$7);}
+				 |IF '(' EXP ')'  STMTS ELSE STMTS {$$ = cg_if_else($3,$5,$7);}
+				 |IF '(' EXP ')'  STMT ELSE STMTS {$$ = cg_if_else($3,$5,$7);}
+				 | IF '(' EXP ')'  STMTS {$$ = cg_if($3,$5);}
                                  |IF '(' EXP ')'  STMT {$$ = cg_if($3,$5);}
+				 
 				;
 ELSESTMT		: ELSE {if_label2();} STMTS {if_label3();}
 				| {if_label3();}
