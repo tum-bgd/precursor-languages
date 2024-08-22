@@ -1,7 +1,0 @@
-void main()
-{
-   move();
-   turn();
-   turn();
-   unknown();
-}

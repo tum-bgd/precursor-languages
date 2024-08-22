@@ -1,8 +1,0 @@
-/*The first loop*/
-void main(){
-   while (true){
-     move();
-     move();
-     turn();
-  }
-}

@@ -1,7 +1,0 @@
-void main()
-{
-   while(front_clear && front_clear || front_clear){
-      move();
-   }
-
-}
