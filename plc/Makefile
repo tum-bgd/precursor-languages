@@ -1,6 +1,6 @@
 all:
 	lex pl-compiler.l
-	yacc -Wno-other pl-compiler.y
+	yacc  pl-compiler.y
 	gcc -g -o plc y.tab.c -ll -ly
 clean:
 	rm -f lex.yy.c
