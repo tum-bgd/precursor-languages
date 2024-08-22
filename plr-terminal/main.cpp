@@ -208,6 +208,15 @@ void load_world(std::string filename)
     std::cout << "Read a world of " << size << "x" << world.size() << std::endl;
 }
 
+int findlabel(std::string label)
+{
+  for (size_t i=0; i < source.size(); i++)
+    if (label == source[i])
+      return i;
+   return -1;
+}
+std::vector<int> stack;
+
 // the fetch loop (e.g., virtual machine)
 int vm(){
   int pc=0; // initialize at line 0
@@ -225,6 +234,25 @@ int vm(){
      std::cout << "Executing <" << line << ">" << std::endl;
      #endif
      pc ++;
+     if (line.rfind("CALL",0)==0){
+       auto label = line.substr(5);
+       label += ":";
+       // push
+       stack.push_back(pc);
+       // jump
+       pc = findlabel(label);
+       if (pc < 0)
+       {
+	    std::cout << "Jump to invalid label: " << label <<std::endl;
+	    exit(-1);	  
+       }
+       
+     }
+     if (line.rfind("RET",0)==0){
+	auto lno = stack.back();      // top
+	stack.resize(stack.size()-1); // pop
+	pc = lno;
+     }
      if (line.rfind("JMP",0)==0){
         bool found=false;
         auto label=line.substr(4);

@@ -44,7 +44,7 @@ void intermediateCode();
 
 extern FILE *fp;
 FILE * f1;
-char *final=NULL; // pointer to the parser result after parsing
+char *final=NULL;
 
 char *buffers[10000]; // maximal program length 10k
 int buffer_top=0;
@@ -116,7 +116,7 @@ char *cg_call(char *name){
    {
       snprintf(ret,1024, "DEPOSIT\n");
    }else
-      snprintf(ret,1024, "CALL @%s\n", name);
+      snprintf(ret,1024, "CALL L%s\n", name);
    return ret;
 }
 
@@ -218,7 +218,32 @@ char *cg_if_else (char *exp, char *body, char *elsecode){
    return ret;
 }
 
+void cg_append(char *s){
+    printf("\n\nCG_APPEND\n%s\n#########\n",s);
+   int len = strlen(s)+10;
+   if (final != NULL)
+     len += strlen(final);
+   char *ret = (char *) malloc(len);
+   ret[0] = '\0'; // empty
+   if (final != NULL)
+     strcpy(ret, final);
+   strcat(ret,s);
+   free(final);
+   final = ret; // new buffer
+}
 
+char *cg_function(char *name, char *body)
+{
+     printf("CG_FUNCTION for name %s\n%s\n\n",name, body);
+     int len = 20+strlen(name)+strlen(body);
+     char *ret = malloc(len);
+     if(strcmp(name, "main") == 0){
+        snprintf(ret,len,"L%s:\n%sHALT\n",name,body);
+     }else
+        snprintf(ret,len,"L%s:\n%sRET\n",name,body);
+     return ret;
+}
+//@todo: check for duplicate labels that could arise form defining same function twice.
 %}
 
 %union{
@@ -251,11 +276,12 @@ char *name;
 %nonassoc IFX IFX1
 %nonassoc ELSE
 
-%type <name> STMT_CALL STMT STMT1 STMTS STMT_WHILE WHILEBODY STMT_IF EXP
+%type <name> STMT_CALL STMT STMT1 STMTS STMT_WHILE WHILEBODY STMT_IF EXP pgmstart function 
 
 %%
-
-pgmstart 			: TYPE ID '(' ')' STMTS {if (strcmp($2,"main")!=0){ printf("Only main allowed\n");exit(3);}final=$5;}
+pgmstart                        : function          {cg_append($1);} |
+                                  function pgmstart {cg_append($1);};
+function 			: TYPE ID '(' ')' STMTS { $$=cg_function($2,$5);}
 				;
 
 STMTS 	: '{' STMT1 '}'{$$=$2;}| 
@@ -402,6 +428,10 @@ int main(int argc, char *argv[])
             exit(-1);
         }
 	f1=fopen("output.trash","w");
+
+	// prepare the final with a boot loader
+	final = malloc(100);
+	strcpy(final,"JMP Lmain\n"); // boot loader
 	
    if(!yyparse())
 		printf("\nParsing complete\n");
@@ -494,7 +524,7 @@ void codegen_call(){
 	fprintf(f1,"PICK\n", st[top]);
     }else {
        // Calling possible only in PL level > 3
-	fprintf(f1,"CALL @%s\n", st[top]);
+	fprintf(f1,"CALL L%s\n", st[top]);
 	
 
     }
