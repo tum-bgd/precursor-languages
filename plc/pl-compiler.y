@@ -279,7 +279,24 @@ char *cg_function(char *name, char *body)
      snprintf(ret,len,"L%s:\n%sRET\n",name,body);
      return ret;
 }
-//@todo: check for duplicate labels that could arise form defining same function twice.
+
+/*
+Linking Stage
+
+
+*/
+int link_labelsunique(){
+   printf("Linker Aspect - Labels Unique not yet implemented\n");
+   return 1;
+}
+int link_resolvecalls(){
+   printf("Linker Aspect - Resolving Symbols not implemented\n");
+   return 1;
+}
+
+
+
+
 %}
 
 
@@ -294,7 +311,7 @@ char *name;
 
 %token INT VOID UINT 
 %token WHILE 
-%token IF ELSE SWITCH CASE BREAK DEFAULT CONTINUE
+%token IF ELSE SWITCH CASE BREAK DEFAULT CONTINUE RETURN
 %token NUM
 %token INCLUDE
 %token  FALSE
@@ -331,6 +348,7 @@ STMT 			:          STMT_IF {$$ = $1;}
 				 | STMT_WHILE {$$=$1;}
 				 | STMT_CALL {$$ = $1;}
 			         | BREAK ';' {$$=strdup("BREAK\n");}
+				 | RETURN ';' {$$=strdup("RET\n");}
 				 | CONTINUE ';' {$$=strdup("CONT\n");}
 				 | ';' {$$= strdup("");}
 				;
@@ -417,7 +435,25 @@ int main(int argc, char *argv[])
 	{
 		printf("\nParsing failed\n");
 		exit(0);
+
 	}
+	// Enter Linker Stage: we do not link together multiple files, but we should do the minimum
+	// sanity check of linkers:
+	/*
+	    make sure all labels are unique
+            make sure all functions called do exist
+
+	    a real linker would add the bootloader, but we did already in the initialization of the output
+	*/
+
+	if (
+	   !link_labelsunique() ||
+	   !link_resolvecalls())
+	   {
+	      printf("Linker Error. Exiting without output");
+	       exit (-1);
+           }
+	
 
 	printf("Parsing result***********************\n");
 	if (final == NULL){

@@ -14,6 +14,7 @@ digit [0-9]
 "unsigned int"	return UINT;
 "case"	return CASE;
 "break"	return BREAK;
+"return"	return RETURN;
 "continue"	return CONTINUE;
 "void" return VOID;
 "while"	return WHILE;
