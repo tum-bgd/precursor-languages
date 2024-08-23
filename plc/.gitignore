@@ -3,3 +3,5 @@ y.tab.c
 plc
 output
 output.*
+pl-compiler.tab.c
+pl-compiler.tab.h

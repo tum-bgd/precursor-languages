@@ -9,7 +9,7 @@ changes: 2024 M. Werner
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-char *yytext; // for generating error message in yyerror
+extern char *yytext; // for generating error message in yyerror
 
 
 /*Prototypes*/
