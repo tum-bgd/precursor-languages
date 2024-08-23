@@ -28,7 +28,7 @@ Use keys
 ### World Files
 
 A world file is a text file with an empty line at the end. It contains characters
-- # for a blocked location
+- a `#` for a blocked location
 - * for an item
 - X for a goal (Niki exits happily when reaching this goal)
 - one of S,W,E,N to place Niki looking South, West, East, North respectively
