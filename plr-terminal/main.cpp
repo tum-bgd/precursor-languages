@@ -71,7 +71,7 @@ void draw_niki(){
    fputs("\033[m",stdout); // reset color
 }
 
-void draw_arena(){
+void draw_arena(std::string message=""){
     cls();
      for(size_t i=0; i < world.size(); i++)
      {
@@ -86,7 +86,8 @@ void draw_arena(){
      }
 	  fputc('\n',stdout);
      }
-     // draw the robot
+     // draw the message
+     std::cout << message << std::endl << std::flush;
      
 
 }
@@ -230,6 +231,7 @@ int vm(){
 	return step_counter;
      }
      std::string line = source[pc];
+     std::string message = "Executed Line " + std::to_string(pc) + ": "+line ;
      #ifdef DEBUG
      std::cout << "Executing <" << line << ">" << std::endl;
      #endif
@@ -347,7 +349,7 @@ int vm(){
 	  std::cout << "Maximal steps reached. Exiting" << std::endl;
 	  exit (4);
      }
-     draw_arena();
+     draw_arena(message);
      fflush(stdout);
      wait();
 
