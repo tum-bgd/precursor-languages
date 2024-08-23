@@ -13,11 +13,12 @@ char *yytext; // for generating error message in yyerror
 
 
 /*Prototypes*/
-
+ extern FILE *yyin;
 extern int yylex (void);
-
+ extern int yylineno;
 
 void yyerror(char *s);
+ int yywrap(){return(1);} // we do only compile a single file.
 
 
 /* Globals*/
@@ -49,7 +50,7 @@ TODO: initialize buffers to be NULL and remove all malloc and free all over the 
 char *_alloc(size_t n){
     buffers[buffer_top++] = (char *) malloc(n);
     // TODO: abort out of mem in both pointers and...
-    printf("Allocated %d slot %d", n, buffer_top-1);
+    printf("Allocated %zd slot %d", n, buffer_top-1);
 }
 
 // replace needle with replacement in haystack, reallocating buffers as needed. reporting if new buffer
@@ -393,7 +394,7 @@ TYPE			: INT
 %%
 
 #include <ctype.h>
-#include"lex.yy.c"
+
 int count=0;
 
 char st[1000][10];
@@ -418,6 +419,7 @@ int tableCount=0;
 
 int main(int argc, char *argv[])
 {
+   
 	yyin = fopen(argv[1], "r");
         if (yyin == NULL)
         {
