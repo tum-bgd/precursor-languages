@@ -2,8 +2,12 @@
 
 Manually as follows:
 
-use win_flex and win_bison from https://github.com/lexxmark/winflexbison/releases
+- use win_flex and win_bison from https://github.com/lexxmark/winflexbison/releases
+- Decompress them into a subfolder winbison
+- Run bootstrap.bat
+- Then cmake flow (build directory, configure, build).
+- Preferably cmake --build . --config=Release not to depend on debug libs
 
-I am now at version 2.5.25 (bison 3.8.2, flex 2.6.4)
+# Compiling on Linux
 
-Run bison -d to generate a header and include it in the lexer
+make
