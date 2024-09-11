@@ -1,0 +1,29 @@
+<html>
+
+  <head>
+    <script type="text/javascript">
+      var initiailzed=false;
+  var Module = {
+    onRuntimeInitialized: function() {
+	initialized=true;
+	js_main();
+    }
+  };
+</script>
+    
+  <script src="testapi.js"></script>
+  </head>
+  <body>
+    <h1> test</h1>
+  </body>
+  <script language="Javascript">
+    function js_main(){
+	console.log("Works");
+    twice = Module.cwrap('twice','number',['number']);
+    console.log(twice(2));
+    }
+
+
+    
+  </script>
+</html>
