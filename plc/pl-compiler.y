@@ -416,6 +416,7 @@ struct Table
 int tableCount=0;
 
 
+#ifndef __EMSCRIPTEN__
 
 int main(int argc, char *argv[])
 {
@@ -471,7 +472,7 @@ int main(int argc, char *argv[])
     return 0;
 }
          
-
+#endif
 void yyerror(char *s)
 {
 	printf("Syntex Error in line number : %d : %s %s\n", yylineno, s, yytext );
