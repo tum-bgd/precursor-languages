@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<style language="css">
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.header {
+  text-align: center;
+  padding: 32px;
+}
+
+.row {
+  display: -ms-flexbox; /* IE 10 */
+  display: flex;
+  -ms-flex-wrap: nowrap; /* IE 10 */
+  flex-wrap: nowrap;
+ /* padding: 0 4px;*/
+}
+#message{
+    position: fixed;
+    height: 80%;
+    width: 80%;
+    background: rgba(200, 70, 0, 0.95);
+    top: 10%;
+    left:10%;
+    padding-top:3em;
+    padding-left:2em;
+    padding-right:2em;
+}
+#messagecontent{
+    overflow:auto;
+    height:70%;
+    background: #DDDDDD;
+    padding:5px;
+    
+}
+#container{
+    margin-left:auto;
+    margin-right:auto;
+    background-color: green;
+    width: 30%;
+    aspect-ratio : 1 / 1;
+    overflow: hide;
+}
+
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header" id="myHeader">
+  <h1>The Robot</h1>
+  <p id="subline">Welcome...</p>
+  <button class="btn" id="btnLoadWorld">Load / Reset  World...</button>
+  <button class="btn" onclick="test()">Test()</button>
+</div>
+
+<div id="container">
+<div class="row"> 
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+</div>
+<div class="row"> 
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+    <img src="gfx/robot.png" >
+</div>
+</div>
+<HR>
+<div class="header">
+  <button class="btn" id="btnMove">Move...</button>
+<button class="btn" id="btnTurn">Turn...</button>
+<button class="btn" id="btnTrace">Show Trace...</button>
+</div>
+<HR>
+<h2>To be invisible / pruned </h2>
+<textarea id="world" rows=25 cols=25>
+##########
+#E       #
+######## #
+#        #
+# ########
+#        #
+######## #
+#        #
+# ########
+#       X#
+##########
+</textarea>
+<div id="message" >
+  <button id="btnDismissMessage">Dismiss</button>
+  <p>&nbsp;</p>
+  <div id="messagecontent">
+    No message
+  </div>
+  <p>End of Message</p>
+</div>
+
+<script>
+  var world;
+  var niki_x, niki_y, niki_o;
+  var step_limit=0;
+  var trace = [];
+  function rotate(x, degrees)
+  {
+      x.css({
+      'transform': 'rotate(' + degrees + 'deg)',
+      '-ms-transform': 'rotate(' + degrees + 'deg)',
+      '-moz-transform': 'rotate(' + degrees + 'deg)',
+      '-webkit-transform': 'rotate(' + degrees + 'deg)',
+      '-o-transform': 'rotate(' + degrees + 'deg)'
+    }); 
+  }
+  function unrotate(x)
+  {
+      x.css({
+      'transform': '',
+	  '-ms-transform':'',
+	  '-moz-transform': '',
+	  '-webkit-transform':'',
+	  '-o-transform': ''
+    }); 
+  }
+
+  function hideMessage(){
+	  $("#message").css('display','none'); 
+      }
+  
+  function modalTextfieldMessage(s)
+  {
+      disableKeyboardMode();
+      $("#message").css('display',''); 
+      $("#messagecontent").html(s);
+  }
+  function showTrace(){
+      modalTextfieldMessage(trace.join('<BR/>'));
+  }
+  function setImageFromChar(r,c,ch){
+      image = $("#img-"+r.toString()+"-"+c.toString())
+      if (ch == 'S' || ch == ' N' || ch == 'E' || ch == 'W')
+      {
+	  niki_y = r;
+	  niki_x = c;
+	  niki_o = ch; // In Javascript, orientation is char
+      }
+      switch(ch)
+      {
+	  case '#': unrotate(image);   image.attr('src',"gfx/blocked.png"); break;
+	  case 'S': rotate(image,90);  image.attr('src',"gfx/robot.png"); break;
+	  case 'N': rotate(image,-90); image.attr('src',"gfx/robot.png"); break;
+	  case 'E': rotate(image,0);   image.attr('src',"gfx/robot.png"); break;
+	  case 'W': rotate(image,180); image.attr('src',"gfx/robot.png"); break;
+	  case 'X':unrotate(image);   image.attr('src',"gfx/goal.png"); break;
+	  default:  unrotate(image); image.attr('src',"gfx/empty.png"); break;
+      }
+
+  }
+
+  function updateGridFromGlobals(){
+      // an update to niki can only update niki and its surroundings. Javascript will
+      // silently ignore wrong values, so the following works even out of bounds
+      for (i=niki_y-1; i <= niki_y+1; i++)
+	  for (j=niki_x-1; j <= niki_x +1; j++){
+	      
+	      setImageFromChar(i,j,world[i][j]);
+	  }
+      setImageFromChar(niki_y,niki_x,niki_o);
+  }
+
+    
+  function loadgrid(){
+      // reset globals
+      trace = [];
+      // load the textarea grid into the global variable and initialize a fresh grid
+      world = $("#world").val().split("\n").filter(row=>row.length > 0);
+      // now modify one of them
+      //$("#img-3-3").attr('src','gfx/goal.png');
+      // world is now array of strings without empty lines
+      
+      $("#container").html(grid(world.length, world[0].length));
+      for (i=0; i < world.length; i++)
+      {
+	  world[i] = world[i].split(''); // turn into array
+          for (j=0; j < world[0].length; j++)
+	  {
+	      setImageFromChar(i,j,world[i][j]);
+	      // remove niki
+	      if (world[i][j] == 'E' || world[i][j] == 'N' || world[i][j] == 'S' || world[i][j] == 'W'){
+		
+		  world[i][j]=' '
+		
+	      }
+	  }
+      }
+     
+  }
+
+  
+  function grid( r,  c)
+  {
+      console.log(r,c)
+      p = (100 / c); 
+      q = (100 / r); 
+      if (q<p) p = q; // we always scale squares on width 
+      ret="";
+      for( i=0; i < r; i++){
+	  ret += "<div class=\"row\">\n";
+	  for ( j=0; j<c; j++){
+              ret += "<img width=\""+p.toString()+"%\" id=\"img-"+i.toString()+"-"+j.toString()+"\" src=\"gfx/robot.png\">";
+	      
+	  }
+	  ret += "\n</div>";
+	  
+      }
+      return ret;
+  }
+
+  /*
+    Visualization and Application of Operations
+  */
+
+  function walkable(y,x)
+  {
+      ch = world[y][x];
+      if (ch == ' ' || ch == '*' || ch == 'X')
+	  return true;
+      return false;
+  }
+  function turn(){
+      if (niki_o == 'S') niki_o='W'
+      else if (niki_o == 'W') niki_o='N'
+      else if (niki_o == 'N') niki_o='E'
+      else if (niki_o == 'E') niki_o='S';
+      trace.push("TURN");
+      updateGridFromGlobals();
+  }
+  function move(){
+      if (niki_o == 'S') niki_y++;
+      if (niki_o == 'N') niki_y--;
+      if (niki_o == 'E') niki_x++;
+      if (niki_o == 'W') niki_x--;
+      trace.push("MOVE");
+      updateGridFromGlobals();
+
+    if (world.length != 0){
+      if (world[niki_y][niki_x] == 'X')
+      {
+	  alert("Maze solved by finding an X in " + trace.length.toString() + " steps");
+      }
+      if (!walkable(niki_y,niki_x)) // bounds check!
+        return false;
+    }
+    return true;
+  }
+
+
+
+
+  function test(){
+      enableKeyboardMode();
+  }
+
+
+
+  function interactive_move(){
+      if(!move()) modalTextfieldMessage('You crashed');
+  }
+  function keyHandler(e){
+	  if (e.key == 'm' && !e.ctrlKey)
+	  {
+	      interactive_move();
+	      e.preventDefault();
+	  }
+	  if (e.which== 27)
+	      disableKeyboardMode();
+ 
+  }
+  
+  function enableKeyboardMode(){
+      // key handler
+      console.log("enable keyboard mode");
+      jQuery(window).keydown(keyHandler);
+      // disable all buttons and input areas
+      $(':button').prop('disabled', true); // Disable all the buttons
+      $(':input').prop('disabled', true); // Disable all the buttons
+      $('#subline').html("Press ESC to exit keyboard mode");
+
+  }
+  function disableKeyboardMode(){
+      // key handler
+      console.log("disable keyboard mode");
+      jQuery(window).off('keydown',keyHandler);
+      $(':button').prop('disabled', false); // Enable all the buttons
+      $(':input').prop('disabled', false); // Disable all the buttons
+      $('#subline').html("&nbsp;");
+  }
+
+  
+  $( document ).ready(function() {
+      loadgrid();
+      $("#btnLoadWorld").click(loadgrid);
+      $("#btnTest").click(test);
+      $("#btnMove").click(interactive_move);
+      $("#btnTurn").click(turn);
+      $("#btnTrace").click(showTrace);
+      $("#btnDismissMessage").click(hideMessage);
+      
+      hideMessage();
+  });
+  </script>
+</body>
+</html>
