@@ -17,6 +17,7 @@ extern char *yytext; // for generating error message in yyerror
 extern int yylex (void);
  extern int yylineno;
 
+ void yyrestart(FILE *);
 void yyerror(char *s);
  int yywrap(){return(1);} // we do only compile a single file.
 
@@ -48,9 +49,10 @@ TODO: initialize buffers to be NULL and remove all malloc and free all over the 
 
 
 char *_alloc(size_t n){
-    buffers[buffer_top++] = (char *) malloc(n);
+    char *ret = buffers[buffer_top++] = (char *) malloc(n);
     // TODO: abort out of mem in both pointers and...
     printf("Allocated %zd slot %d", n, buffer_top-1);
+    return ret;
 }
 
 // replace needle with replacement in haystack, reallocating buffers as needed. reporting if new buffer
@@ -416,8 +418,37 @@ struct Table
 int tableCount=0;
 
 
-#ifndef __EMSCRIPTEN__
+#ifdef __EMSCRIPTEN__
+/*For emscripten, we provide a string compiler*/
+typedef struct yy_buffer_state * YY_BUFFER_STATE;
+extern int yyparse();
+extern YY_BUFFER_STATE yy_scan_string(char * str);
+extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
+extern void yy_flush_buffer( YY_BUFFER_STATE buffer );
+extern void YY_FLUSH_BUFFER;
+void compile(char *source){
+   // clean output (memory leaks!)
+   final = _alloc(1);
+   final[0]='\0';
+   /*Parsing String*/
+    yyrestart(NULL);
+//    yy_flush_buffer( YY_CURRENT_BUFFER ); // discard what we have
+    YY_FLUSH_BUFFER;
+    printf("Debugging: source=<%s>",source);
+    YY_BUFFER_STATE buffer = yy_scan_string(source);
+    yyparse();
+    yy_delete_buffer(buffer);
+}
 
+void yyerror(char *s)
+{
+   int len = 1024+strlen(yytext)+strlen(s);
+   final = _alloc(len);
+   snprintf(final,len, "SYNTAX ERROR\n============\nSyntax Error in line number : %d : %s %s\n", yylineno, s, yytext );
+}
+
+
+#else
 int main(int argc, char *argv[])
 {
    
@@ -471,11 +502,11 @@ int main(int argc, char *argv[])
 	fclose(yyin);
     return 0;
 }
-         
-#endif
 void yyerror(char *s)
 {
-	printf("Syntex Error in line number : %d : %s %s\n", yylineno, s, yytext );
+	printf("Syntax Error in line number : %d : %s %s\n", yylineno, s, yytext );
 }
+         
+#endif
 
 
