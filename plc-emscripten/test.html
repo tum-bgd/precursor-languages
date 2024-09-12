@@ -1,28 +1,67 @@
 <html>
 
   <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
     <script type="text/javascript">
       var initiailzed=false;
+      var compile;
   var Module = {
     onRuntimeInitialized: function() {
 	initialized=true;
-	js_main();
+	compile = 	Module.cwrap('invoke_compile','string',['string']);
+
     }
   };
 </script>
     
-  <script src="testapi.js"></script>
+    <script src="testapi.js"></script>
   </head>
   <body>
-    <h1> test</h1>
+    <h1> CNIKI Compiler Demo</h1>
+    <h2> Source </h2>
+    <textarea id="source" COLS=80 ROWS=25>
+/*
+The right-hand rule maze solver
+
+This program is surprisingly powerful. When you are in a maze and you always take the
+rightmost possible way, you solve the maze. This is because the sequence of walls you walk along
+is a closed polygon and 
+
+
+*/
+void main()
+{
+   // we assume to be bottom-left looking right!
+   while(true)  // go upwards
+   {
+      turn();turn();turn(); // look right
+      while (front_blocked)
+        turn();
+      move();
+   }
+}
+    </textarea>
+
+
+    <textarea id="assembly" COLS=80 ROWS=25 disabled>
+      
+    </textarea>
+    <BR/>
+    <button id="compile">Compile...</button>
+
   </body>
   <script language="Javascript">
-    function js_main(){
-	console.log("Works");
-    twice = Module.cwrap('twice','number',['number']);
-    console.log(twice(2));
+    function do_compile(){
+	src = $('#source').val()
+	compiled = compile(src);
+	$('#assembly').val(compiled);
     }
 
+$(document).ready(function() {
+    $("#compile").click(do_compile); 
+});
+    
 
     
   </script>

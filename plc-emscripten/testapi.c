@@ -1,9 +1,15 @@
 #include <stdio.h>
 
-int get_it(){
-  return 42;
-}
+extern char *final; // the final source code after compilation
+void compile(char *); // the compiler
 
-int twice(int a){
-   return 2*a;
+
+
+char * invoke_compile(char *what){
+  if(what == NULL){
+    printf("DEBUG> not compiling from a NULL pointer");
+    return final;
+  }
+  compile(what);
+  return final;
 }
