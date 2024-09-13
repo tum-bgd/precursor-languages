@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="interaction.js"></script>  
+<link rel="stylesheet" href="precursor-languages.css">
+
+</head>
+<body>
+
+<div class="header" id="myHeader">
+  <h1>Precursor Languages for C</h1>
+  <p id="subline">Algorithmic Thinking</p>
+</div>
+
+
+<div class="tab">
+  <button class="tablinks" onclick="openCity(event, 'Welcome')" id="defaultOpen">Welcome</button>
+  <button class="tablinks" onclick="openCity(event, 'World')">The World Editor</button>
+  <button class="tablinks" onclick="openCity(event, 'Source')">Source Code & Robot</button>
+  <button class="tablinks" onclick="openCity(event, 'Machine')">Machine Code & Robot</button>
+  <button class="tablinks" onclick="openCity(event, 'Robot')">Interactive Robot</button>
+  
+</div>
+
+<div id="Welcome" class="tabcontent">
+  <h2>Welcome</h2>
+  <p>This application aims at teaching computational thinking and preparing to learn
+    the language C based on ideas including, but not limited to NIKI and Karel the Robot.</p>
+
+  <h3>Interactive Mode</h3>
+  <ul>
+    <li>First, open the tab "The World" and load a world for our robot. Click on Interactive...</li>
+    <li>Then, you will be on the tab "The Robot" and can steer the robot with its two operations.</li>
+  </ul>
+  <h3>Programming Mode</h3>
+  <ul>
+    <li>First, open the tab "The World" and load a world for our robot.</li>
+    <li>Then, you will be on the tab "The Robot" and can steer the robot with its two operations.</li>
+  </ul>
+  <h3>Documentation</h3>
+  TODO
+  <h3>Contributing</h3>
+  TODO
+  
+</div>
+
+<div id="World" class="tabcontent">
+  <h2>The World</h2>
+  <p>In this tab, you can create a world for your robot or load one of the predefined ones.</p> 
+<div>
+<textarea id="world" class="texteditor" >
+##########
+#E       #
+######## #
+#        #
+# ########
+#        #
+######## #
+#        #
+# ########
+#       X#
+##########
+</textarea>
+</div>
+<button id="btnShowWorld">Check & Show...</button>
+<div id="worldpreview-world" class="worldcontainer">
+  <button onClick="onBtnShowWorld();" class="loadbutton">Load from World Editor...</button>
+</div>
+</div>
+
+<div id="Source" class="tabcontent">
+  <h2>Source & Robot</h2>
+  <p>In this tab, you can implement in the various precursor languages. For simplicity, we show the world of the robot as well.</p>
+<div>
+<textarea id="source" class="texteditor" >
+/*
+A right-hand rule maze solver
+
+This program is surprisingly powerful. When you are in a maze and you always take the
+rightmost possible way, you solve the maze. 
+*/
+void main()
+{
+   // we assume to be bottom-left looking right!
+   while(true)  // go upwards
+   {
+      turn();turn();turn(); // look right
+      while (front_blocked)
+        turn();
+      move();
+   }
+}
+</textarea>
+<button id="btnCompile">Compile</button>
+<div id="worldpreview-source" class="worldcontainer">
+<button onClick="onBtnShowWorld();" class="loadbutton">Load from World Editor...</button>
+</div>
+</div>
+
+
+
+</div>
+<div id="Machine" class="tabcontent">
+  <h2>Machine Code & Robot</h2>
+  <p>This tab allows you to inspect and edit the machine code to run on the robot and run the machine code.</p>
+  <div>
+<textarea id="assembly" class="texteditor" >
+MOVE
+TURN
+</textarea>
+<button id="btnRun">Run...</button>
+<div id="worldpreview-assembly" class="worldcontainer">
+<button onClick="onBtnShowWorld();" class="loadbutton">Load from World Editor...</button>
+</div>
+</div>
+</div>
+<div id="Robot" class="tabcontent">
+  <h2>Interactive Robot</h2>
+  <p>Steer the robot with two buttons.</p>
+  <p>
+  <div class="header">
+    <button>Move...</button>
+    <button>Turn...</button>
+  </div>
+  </p>
+<div id="world-interactive" class="worldcontainer fullwidth">
+<button onClick="onBtnShowWorld();" class="loadbutton">Load from World Editor...</button>
+</div>
+
+  <p>(c) 2024 Martin Werner (Technical University of Munich)</p>
+
+
+   
+</body>
+</html> 
+<script>
+function openCity(evt, cityName) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+  document.getElementById(cityName).style.display = "block";
+  evt.currentTarget.className += " active";
+}
+
+// Get the element with id="defaultOpen" and click on it
+document.getElementById("defaultOpen").click();
+  
+
+/* The Entry Point */
+  $(document).ready(function (e) {
+      console.log("ready");
+      $("#btnShowWorld").click(onBtnShowWorld);
+
+  });
+  
+</script>
