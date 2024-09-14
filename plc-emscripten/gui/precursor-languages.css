@@ -87,3 +87,21 @@ body {font-family: Arial;}
 .large {
     width:70%;
 }
+#message{
+    position: fixed;
+    height: 80%;
+    width: 80%;
+    background: rgba(200, 70, 0, 0.95);
+    top: 10%;
+    left:10%;
+    padding-top:3em;
+    padding-left:2em;
+    padding-right:2em;
+}
+#messagecontent{
+    overflow:auto;
+    height:70%;
+    background: #DDDDDD;
+    padding:5px;
+    
+}

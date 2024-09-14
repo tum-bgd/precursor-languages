@@ -1,4 +1,9 @@
-
+/*
+Globals
+*/
+var world;
+var niki_x,niki_y,niki_o;
+var trace=[];
 /*Create an empty grid with a prefix and return it as a string*/
 function createGridHTML( r,  c,prefix="img")
   {
@@ -80,8 +85,8 @@ function loadGridFromEditor(editor, container, prefix="img"){
 	      // remove niki
 	      if (theworld[i][j] == 'E' || theworld[i][j] == 'N' || theworld[i][j] == 'S' || theworld[i][j] == 'W'){
 		
-		  theworld[i][j]=' '
 		  theniki=[i,j,theworld[i][j]];
+		  theworld[i][j]=' '
 		
 	      }
 	  }
@@ -92,10 +97,98 @@ function loadGridFromEditor(editor, container, prefix="img"){
     }
   }
 
+  function updateGridFromGlobals(prefix){
+      // an update to niki can only update niki and its surroundings. Javascript will
+      // silently ignore wrong values, so the following works even out of bounds
+      for (i=niki_y-1; i <= niki_y+1; i++)
+	  for (j=niki_x-1; j <= niki_x +1; j++){
+	      
+	      setImageFromChar(prefix,i,j,world[i][j]);
+	  }
+      console.log("setting", niki_y,niki_x,niki_o, prefix);
+      setImageFromChar(prefix, niki_y,niki_x,niki_o);
+  }
 
 
-/* Button Handler */
 
+/*NIKI Actions*/
+  /*
+    Visualization and Application of Operations
+  */
+
+  function walkable(y,x)
+  {
+      ch = world[y][x];
+      if (ch == ' ' || ch == '*' || ch == 'X')
+	  return true;
+      return false;
+  }
+  function turn(){
+      if (niki_o == 'S') niki_o='W'
+      else if (niki_o == 'W') niki_o='N'
+      else if (niki_o == 'N') niki_o='E'
+      else if (niki_o == 'E') niki_o='S';
+      trace.push("TURN");
+      updateGridFromGlobals("worldpreview-int");
+  }
+  function move(){
+      if (niki_o == 'S') niki_y++;
+      if (niki_o == 'N') niki_y--;
+      if (niki_o == 'E') niki_x++;
+      if (niki_o == 'W') niki_x--;
+      trace.push("MOVE");
+      updateGridFromGlobals("worldpreview-int");
+
+    if (world.length != 0){
+      if (world[niki_y][niki_x] == 'X')
+      {
+	  modalTextfieldMessage("Maze solved by finding a goal in " + trace.length.toString() + " steps. <BR/> Well done!<BR/><BR/>Trace:<BR/>"+ trace.join("<BR/>"));
+      }
+      if (!walkable(niki_y,niki_x)) // bounds check!
+        return false;
+    }
+    return true;
+  }
+
+/* Compiler */
+
+function do_compile(){
+    src = $('#source').val()
+    compiled = compile(src);
+    if (compiled.startsWith("SYNTAX ERROR")){
+	alert(compiled);
+    }else{
+	$('#assembly').val(compiled);
+	document.getElementById('btnTabMachineCode').click();
+	
+    }
+}
+
+
+
+function interactive_move(){
+      if(!move()) modalTextfieldMessage('You crashed');
+  }
+/* Message*/
+  function hideMessage(){
+	  $("#message").css('display','none'); 
+      }
+  
+  function modalTextfieldMessage(s)
+  {
+      disableKeyboardMode();
+      $("#message").css('display',''); 
+      $("#messagecontent").html(s);
+  }
+  function showTrace(){
+      modalTextfieldMessage(trace.join('<BR/>'));
+  }
+
+
+/* IO Handler */
+function disableKeyboardMode()
+{
+}
 
 function onBtnShowWorld(){
     console.log("default clicker");
@@ -103,6 +196,204 @@ function onBtnShowWorld(){
     loadGridFromEditor("#world","#worldpreview-source","worldpreview-source");
     loadGridFromEditor("#world","#worldpreview-assembly","worldpreview-asm");
     loadGridFromEditor("#world","#world-interactive","worldpreview-int");
+    // set globals
+    world = w.world;
+    niki_y = w.niki[0];
+    niki_x = w.niki[1];
+    niki_o = w.niki[2];
     
-    console.log(w);
 }
+
+/* VM Globals */
+var source;
+var stack=[];
+var pc, step_counter, cpu_flag;
+var vm_message="";
+var vm_state;
+
+/*utility: find label*/
+function getLabelRow(label){
+    console.log("Label: "+label);
+    for (i=0; i< source.length; i++)
+	if (label == source[i])
+	    return i;
+    return -1;
+}
+
+// async loop  VM
+function step(){
+    if (vm_state == "STOPPED")
+    {
+	return; // any pending timeout after stop is ignored
+    }
+    
+     // fetch a line
+     if (pc < 0 || pc >= source.length){
+	 modalTextfieldMessage("Program Counter (Line Pointer) outside source! Exit... (pc=" + pc.toString() +  ")");
+	return step_counter;
+     }
+    console.log("PC="+pc.toString());
+    line = source[pc];
+    console.log("Source Line: " + line);
+    pc ++;
+
+    tokens = line.split(" "); 
+
+    statemachine = {
+	"MOVE": function (t){
+	    if (!move()){
+		vm_state="COLLISION";
+		vm_message="Niki collided with world!";
+		return false;
+	    }
+	    return true;
+	}, // MOVE
+	"TURN": function (t){
+	    return turn(); // forward success back
+	}, 
+	"HALT": function (t){
+	    vm_state="STOPPED"
+	    vm_message="Machine stopped from instruction HOLD on line " + pc.toString();
+	    return false; // stops machine?! make it more positive
+	},
+	"JMP": function(t) {
+	    row = getLabelRow(t[1]+":")
+	    if (row < 0) {
+		vm_state="ABORTED";
+		vm_message="Machine tried to jump to non-existing label "+label;
+		return false;
+	    }else{
+		pc=row+1
+		return true;
+	    }   
+	},
+	"JNZ": function(t){
+	    if (cpu_flag) statemachine["JMP"](t); 
+
+	},
+	"JZ": function(t){
+	    if (!cpu_flag) statemachine["JMP"](t); 
+	},
+	"CALL": function(t){
+	    stack.push(pc);
+	    row = getLabelRow(t[1]+":")
+	    if (row < 0) {
+		vm_state="ABORTED";
+		vm_message="Machine tried to call non-existing function "+t[1];
+		return false;
+	    }else{
+		pc=row+1
+		return true;
+	    }   
+	},
+	"RET": function(t){
+	    lno = stack.pop()+1;
+	    console.log(`RET TO ${lno}`)
+	    pc = lno;
+	    return true; // TODO: detect and catch stack underflow and overflow
+	}
+	
+	   
+	
+	
+	
+    }
+
+    // labels are ignored.
+    if (tokens[0].endsWith(":")){
+	console.log("Label detected: "+line);
+	setTimeout(step,0); // no delay
+    }
+    // all other must be valid instructions
+    if (tokens[0] in statemachine){
+	console.log("Detected " + tokens[0]);
+	state = statemachine[tokens[0]](tokens);
+         step_counter ++;
+	 
+	if (state){
+	    // continue
+	    setTimeout(step,500);
+	}else{
+	    modalTextfieldMessage(`VM State: ${vm_state}<BR/>VM Message: ${vm_message}`);	    
+	    console.log("Check if failed or success or clean terminate");
+	}
+    }else{
+	console.log("UNIMPLEMENTED; STILL CONTINUING FURTHER; SHOULD SET GLOBAL ERROR CONDITION OR CALL OUT");
+    }
+
+
+/////////////////////////////////
+//     if (line.rfind("PICK",0)==0)
+//       if (!pick())
+//       {
+//	  std::cout << "Pick failed" << std::endl;
+//	  exit (-1);
+//       }; // add boolean check
+//     if (line.rfind("DEPO",0)==0)
+//       if (!deposit())
+//       {
+//	  std::cout << "Deposit failed" << std::endl;
+//	  exit (-1);
+//       }; 
+//     if (line.rfind("TURN",0)==0)
+//       turn(); 
+//     if (line.rfind("HALT",0)==0)
+//     {
+//	std::cout << "Machine stopped after " << step_counter << " instructions." << std::endl;
+//	return step_counter;
+//     }
+//     if (line.rfind("LOADFB",0)==0)
+//     {
+//        cpu_flag=occupied(niki_o); // in niki_o
+//	//std::cout << "Loading Sensor front_blocked: " << cpu_flag << std::endl; 
+//     }
+//     if (line.rfind("LOADHI",0)==0)
+//     {
+//        cpu_flag=(world[niki_y][niki_x] == '*'); // in niki_o
+//	//std::cout << "Loading Sensor front_blocked: " << cpu_flag << std::endl; 
+//     }
+//     if (step_limit != 0 && step_counter >= step_limit){
+//	  std::cout << "Maximal steps reached. Exiting" << std::endl;
+//	  exit (4);
+//     }
+//     draw_arena(message);
+//     fflush(stdout);
+//     wait();
+//
+//  }
+//
+
+
+
+}
+
+function vm_run()
+{
+    vmstate="RUNNING";
+    source=$("#assembly").val().split("\n");
+    stack=[];
+    pc=0;
+    step_counter=0;
+    cpu_flag=false;
+    console.log(source);
+    step();
+}
+/*
+MAIN
+*/
+  $(document).ready(function (e) {
+      console.log("ready");
+      $("#btnShowWorld").click(onBtnShowWorld);
+    $("#btnCompile").click(do_compile); 
+      $("#btnMove").click(interactive_move);
+      $("#btnTurn").click(turn);
+      $("#btnDismissMessage").click(hideMessage);
+      $("#btnRun").click(vm_run);
+      $("#btnShowTrace").click(showTrace);
+      $("#btnRestart").click(function(){
+	  resetTrace();
+	  onBtnShowWorld(); // load all grids and place niki
+      });
+      hideMessage();
+
+  });

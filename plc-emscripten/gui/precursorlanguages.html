@@ -3,7 +3,21 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script src="interaction.js"></script>  
+<script src="interaction.js"></script>
+<script type="text/javascript">
+var initiailzed=false;
+var compile;
+var Module = {
+    onRuntimeInitialized: function() {
+	initialized=true;
+	compile = 	Module.cwrap('invoke_compile','string',['string']);
+
+    }
+  };
+</script>
+
+<script src="testapi.js"></script><!-- TODO Rename-->
+
 <link rel="stylesheet" href="precursor-languages.css">
 
 </head>
@@ -19,7 +33,7 @@
   <button class="tablinks" onclick="openCity(event, 'Welcome')" id="defaultOpen">Welcome</button>
   <button class="tablinks" onclick="openCity(event, 'World')">The World Editor</button>
   <button class="tablinks" onclick="openCity(event, 'Source')">Source Code & Robot</button>
-  <button class="tablinks" onclick="openCity(event, 'Machine')">Machine Code & Robot</button>
+  <button class="tablinks" onclick="openCity(event, 'Machine')" id="btnTabMachineCode">Machine Code & Robot</button>
   <button class="tablinks" onclick="openCity(event, 'Robot')">Interactive Robot</button>
   
 </div>
@@ -110,7 +124,7 @@ void main()
 MOVE
 TURN
 </textarea>
-<button id="btnRun">Run...</button>
+<button id="btnChangeViewAndRun">Run...</button>
 <div id="worldpreview-assembly" class="worldcontainer">
 <button onClick="onBtnShowWorld();" class="loadbutton">Load from World Editor...</button>
 </div>
@@ -121,22 +135,38 @@ TURN
   <p>Steer the robot with two buttons.</p>
   <p>
   <div class="header">
-    <button>Move...</button>
-    <button>Turn...</button>
+    <button id="btnRun">Run Program...</button>
+    <button id="btnShowTrace">Show Trace...</button>
+    <button id="btnRestart">Restart...</button>
+    
   </div>
   </p>
 <div id="world-interactive" class="worldcontainer fullwidth">
 <button onClick="onBtnShowWorld();" class="loadbutton">Load from World Editor...</button>
 </div>
+  <div class="header">
+    <button id="btnMove">Move...</button>
+    <button id="btnTurn">Turn...</button>
+  </div>
 
+</div>
   <p>(c) 2024 Martin Werner (Technical University of Munich)</p>
 
+<div id="message" >
+  <button id="btnDismissMessage">Dismiss</button>
+  <p>&nbsp;</p>
+  <div id="messagecontent">
+    No message
+  </div>
+  <p>End of Message</p>
+</div>
 
    
 </body>
 </html> 
 <script>
-function openCity(evt, cityName) {
+/*rename*/
+  function openCity(evt, cityName) {
   var i, tabcontent, tablinks;
   tabcontent = document.getElementsByClassName("tabcontent");
   for (i = 0; i < tabcontent.length; i++) {
@@ -154,11 +184,5 @@ function openCity(evt, cityName) {
 document.getElementById("defaultOpen").click();
   
 
-/* The Entry Point */
-  $(document).ready(function (e) {
-      console.log("ready");
-      $("#btnShowWorld").click(onBtnShowWorld);
-
-  });
   
 </script>
