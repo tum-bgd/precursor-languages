@@ -55,7 +55,7 @@ function  resetTrace(){
 
 
 function setImageFromChar(prefix,r,c,ch){
-    console.log("setImage prefix="+prefix);
+    //console.log("setImage prefix="+prefix);
       image = $("#"+prefix+"-"+r.toString()+"-"+c.toString())
       switch(ch)
       {
@@ -102,10 +102,10 @@ function loadGridFromEditor(editor, container, prefix="img"){
       // silently ignore wrong values, so the following works even out of bounds
       for (i=niki_y-1; i <= niki_y+1; i++)
 	  for (j=niki_x-1; j <= niki_x +1; j++){
-	      
-	      setImageFromChar(prefix,i,j,world[i][j]);
+	      if (i >= 0 && i < world.length && j >= 0 && j < world[0].length)
+		  setImageFromChar(prefix,i,j,world[i][j]);
 	  }
-      console.log("setting", niki_y,niki_x,niki_o, prefix);
+      //console.log("setting", niki_y,niki_x,niki_o, prefix);
       setImageFromChar(prefix, niki_y,niki_x,niki_o);
   }
 
@@ -123,6 +123,18 @@ function loadGridFromEditor(editor, container, prefix="img"){
 	  return true;
       return false;
   }
+
+function front_occupied(y,x,o)
+{
+    switch(o){
+      case 'W': x --; break;
+      case 'E': x ++; break;
+      case 'N': y --; break;
+      case 'S': y ++; break;
+    }
+    return (!walkable(y,x));
+}
+
   function turn(){
       if (niki_o == 'S') niki_o='W'
       else if (niki_o == 'W') niki_o='N'
@@ -143,6 +155,7 @@ function loadGridFromEditor(editor, container, prefix="img"){
       if (world[niki_y][niki_x] == 'X')
       {
 	  modalTextfieldMessage("Maze solved by finding a goal in " + trace.length.toString() + " steps. <BR/> Well done!<BR/><BR/>Trace:<BR/>"+ trace.join("<BR/>"));
+	  vm_state="STOPPED"
       }
       if (!walkable(niki_y,niki_x)) // bounds check!
         return false;
@@ -191,7 +204,7 @@ function disableKeyboardMode()
 }
 
 function onBtnShowWorld(){
-    console.log("default clicker");
+    
     w = loadGridFromEditor("#world","#worldpreview-world","worldeditorpreview");
     loadGridFromEditor("#world","#worldpreview-source","worldpreview-source");
     loadGridFromEditor("#world","#worldpreview-assembly","worldpreview-asm");
@@ -213,7 +226,7 @@ var vm_state;
 
 /*utility: find label*/
 function getLabelRow(label){
-    console.log("Label: "+label);
+    
     for (i=0; i< source.length; i++)
 	if (label == source[i])
 	    return i;
@@ -236,7 +249,7 @@ function step(){
     line = source[pc];
     console.log("Source Line: " + line);
     pc ++;
-
+    
     tokens = line.split(" "); 
 
     statemachine = {
@@ -249,7 +262,8 @@ function step(){
 	    return true;
 	}, // MOVE
 	"TURN": function (t){
-	    return turn(); // forward success back
+	    turn();
+	    return true;
 	}, 
 	"HALT": function (t){
 	    vm_state="STOPPED"
@@ -257,6 +271,7 @@ function step(){
 	    return false; // stops machine?! make it more positive
 	},
 	"JMP": function(t) {
+	    console.log(`In JMP with ${t}`);
 	    row = getLabelRow(t[1]+":")
 	    if (row < 0) {
 		vm_state="ABORTED";
@@ -268,11 +283,13 @@ function step(){
 	    }   
 	},
 	"JNZ": function(t){
-	    if (cpu_flag) statemachine["JMP"](t); 
-
+	    if (cpu_flag) return statemachine["JMP"](t); 
+	    return true;
 	},
 	"JZ": function(t){
-	    if (!cpu_flag) statemachine["JMP"](t); 
+	    console.log(`JZ with flag ${cpu_flag}`);
+	    if (!cpu_flag) return statemachine["JMP"](t);
+	    return true;
 	},
 	"CALL": function(t){
 	    stack.push(pc);
@@ -287,15 +304,19 @@ function step(){
 	    }   
 	},
 	"RET": function(t){
-	    lno = stack.pop()+1;
+	    lno = stack.pop();
 	    console.log(`RET TO ${lno}`)
 	    pc = lno;
 	    return true; // TODO: detect and catch stack underflow and overflow
+	},
+	"LOADFB": function(t){
+	    cpu_flag=front_occupied(niki_y, niki_x,niki_o);
+	    return true;
+	},
+	"LOADHI": function(t){
+            cpu_flag=(world[niki_y][niki_x] == '*'); 
+	    return true;
 	}
-	
-	   
-	
-	
 	
     }
 
@@ -303,16 +324,18 @@ function step(){
     if (tokens[0].endsWith(":")){
 	console.log("Label detected: "+line);
 	setTimeout(step,0); // no delay
+	
+	return;
     }
     // all other must be valid instructions
     if (tokens[0] in statemachine){
 	console.log("Detected " + tokens[0]);
 	state = statemachine[tokens[0]](tokens);
-         step_counter ++;
+        step_counter ++;
 	 
 	if (state){
 	    // continue
-	    setTimeout(step,500);
+	    setTimeout(step,250);
 	}else{
 	    modalTextfieldMessage(`VM State: ${vm_state}<BR/>VM Message: ${vm_message}`);	    
 	    console.log("Check if failed or success or clean terminate");
@@ -369,7 +392,7 @@ function step(){
 
 function vm_run()
 {
-    vmstate="RUNNING";
+    vm_state="RUNNING";
     source=$("#assembly").val().split("\n");
     stack=[];
     pc=0;
