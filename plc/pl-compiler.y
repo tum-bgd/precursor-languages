@@ -428,8 +428,8 @@ extern void yy_flush_buffer( YY_BUFFER_STATE buffer );
 extern void YY_FLUSH_BUFFER;
 void compile(char *source){
    // clean output (memory leaks!)
-   final = _alloc(1);
-   final[0]='\0';
+    final = _alloc(100);
+   strcpy(final,"CALL Lmain\nHALT\n"); // boot loader
    /*Parsing String*/
     yyrestart(NULL);
 //    yy_flush_buffer( YY_CURRENT_BUFFER ); // discard what we have
