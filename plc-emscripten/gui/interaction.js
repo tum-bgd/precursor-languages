@@ -180,7 +180,10 @@ function do_compile(){
 
 
 function interactive_move(){
-      if(!move()) modalTextfieldMessage('You crashed');
+    if(!move()) {
+	modalTextfieldMessage('You crashed<BR/><BR/>Your trace so far:<BR/>'+trace.join('<BR/>'));
+	
+    }
   }
 /* Message*/
   function hideMessage(){
@@ -392,6 +395,8 @@ function step(){
 
 function vm_run()
 {
+    // invalidate all traces
+    resetEnvironment();  
     vm_state="RUNNING";
     source=$("#assembly").val().split("\n");
     stack=[];
@@ -400,6 +405,12 @@ function vm_run()
     cpu_flag=false;
     console.log(source);
     step();
+}
+
+function resetEnvironment(){
+	  resetTrace();
+	  onBtnShowWorld(); // load all grids and place niki
+  
 }
 /*
 MAIN
@@ -412,11 +423,15 @@ MAIN
       $("#btnTurn").click(turn);
       $("#btnDismissMessage").click(hideMessage);
       $("#btnRun").click(vm_run);
+      $('#btnChangeViewAndRun').click(function(){
+	  document.getElementById('btnTabInteractive').click();
+	  vm_run();
+      });
       $("#btnShowTrace").click(showTrace);
       $("#btnRestart").click(function(){
-	  resetTrace();
-	  onBtnShowWorld(); // load all grids and place niki
+	  resetEnvironment();
       });
-      hideMessage();
+      onBtnShowWorld(); // load default world
+      hideMessage(); // enable user interface
 
   });
