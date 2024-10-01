@@ -1,0 +1,13 @@
+/*
+Conditional Execution - Breaking out of the loop
+
+(c) 2024 M. Werner
+*/
+
+void main(){
+  while (true){
+    if (front_blocked) 
+      break;
+    move();
+  }
+}

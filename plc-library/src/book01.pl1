@@ -1,0 +1,14 @@
+/*
+First program. This is a multiline comment and can explain the code.
+
+If you want to compile this program, you should invoke the
+Precursor Language Compiler (plc) for example as follows:
+
+plc book1.pl1
+
+(c) 2024 M. Werner
+*/
+
+void main(){
+   move(); // this will move our robot.
+}

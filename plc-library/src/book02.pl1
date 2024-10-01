@@ -1,0 +1,19 @@
+/*
+Program to solve world book02.wrl
+(c) 2024 M. Werner
+*/
+
+void main(){
+   // look left
+   turn(); 
+   // move to the wall
+   move();move();move();move();
+   // look down
+   turn();turn();turn();
+   // move to the wall
+   move();move();move();move();
+   // look right
+   turn();turn();turn();
+   // three steps left
+   move();move();move();move();
+}
