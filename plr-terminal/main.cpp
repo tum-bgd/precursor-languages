@@ -41,7 +41,7 @@ void cls(){
 }
 
 enum {
-   LEFT,UP,RIGHT, DOWN,MAX_ORIENTATION
+   LEFT,DOWN,RIGHT, UP,MAX_ORIENTATION
 }Orientation;
 
 int niki_x, niki_y, niki_o;
