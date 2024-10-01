@@ -1,0 +1,13 @@
+/*
+ Test return
+ This now walks to the first wall 
+*/
+
+
+
+void main(){
+   // recursive loop
+   move();
+   return;
+   move();
+}

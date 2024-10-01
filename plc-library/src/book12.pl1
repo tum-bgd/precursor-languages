@@ -1,0 +1,22 @@
+/*
+  Recursion
+*/
+
+void walk(){
+   if (front_blocked)
+   {
+	// prepare for going back
+	turn();
+	turn();
+   }else{
+     move();
+     walk(); // function calls itself
+     move();
+   }
+}
+
+
+void main(){
+   // recursive loop
+   walk();
+}

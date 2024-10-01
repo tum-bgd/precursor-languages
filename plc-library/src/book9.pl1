@@ -1,0 +1,20 @@
+/*
+The right-hand rule maze solver
+
+This program is surprisingly powerful. When you are in a maze and you always take the
+rightmost possible way, you solve the maze. This is because the sequence of walls you walk along
+is a closed polygon and 
+
+
+*/
+void main()
+{
+   // we assume to be bottom-left looking right!
+   while(true)  // go upwards
+   {
+      turn();turn();turn(); // look right
+      while (front_blocked)
+        turn();
+      move();
+   }
+}

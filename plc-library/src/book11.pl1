@@ -1,0 +1,13 @@
+/*
+Function call
+*/
+
+void turnleft(){
+  turn();
+  turn();
+  turn();
+}
+
+void main(){
+  turnleft();
+}

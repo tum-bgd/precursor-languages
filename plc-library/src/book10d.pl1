@@ -1,0 +1,15 @@
+/*
+Testing and Introducing IF ELSE
+Two Blocks
+
+*/
+
+void main(){
+   if (front_blocked)
+     turn();
+   else{
+     move();
+   }
+
+
+}

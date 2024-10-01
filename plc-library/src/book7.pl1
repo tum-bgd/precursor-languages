@@ -1,0 +1,36 @@
+/*
+  Walks until obstacle and picks all items
+  along the way
+*/
+void main()
+{
+   // we assume to be bottom-left looking right!
+   while(true)  // go upwards
+   {
+      while(true) // this loop goes and eats to the right
+      {
+         if(has_item)
+           pick();
+         if (front_blocked)
+           break;
+         move();
+      }
+      // now, we should be right, looking right, all food eaten
+      turn();
+      // we are looking up, let us see if there is more work to do and a new
+      // scanline!
+      if (front_blocked)
+         break;
+      move();
+      
+      turn();
+      while(true){ // go back without eating
+        if (front_blocked)
+	  break;
+	  move();
+     }
+     // we should be now one line up, but entirely to the left. Let us look right
+     turn(); 
+     turn();
+     }
+}
