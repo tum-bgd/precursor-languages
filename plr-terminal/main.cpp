@@ -41,14 +41,14 @@ void cls(){
 }
 
 enum {
-   RIGHT,UP,LEFT, DOWN,MAX_ORIENTATION
+   LEFT,UP,RIGHT, DOWN,MAX_ORIENTATION
 }Orientation;
 
 int niki_x, niki_y, niki_o;
 int step_limit=0;
 std::vector<std::string> world;
 std::vector<std::string> source;
-std::ofstream *pTrace=NULL;
+std::ofstream *pTrace=NULL, *pJSONLog = NULL;
 
 
 
@@ -70,7 +70,32 @@ void draw_niki(){
    }
    fputs("\033[m",stdout); // reset color
 }
+char niki_orientation_as_char(){
+  if (niki_o == LEFT) return 'W';
+  if (niki_o == UP) return 'N';
+  if (niki_o == RIGHT) return 'E';
+  if (niki_o == DOWN) return 'S';
+  return '?';
+}
 
+std::string serialize_arena(){
+     std::string ret="";
+     for(size_t i=0; i < world.size(); i++)
+     {
+        for (size_t j=0; j< world[0].size(); j++){
+	  // the robot
+	  if (j==niki_x && i == niki_y)
+	  {
+	     ret += niki_orientation_as_char();
+	  }else{
+	      	ret += world[i][j];
+	  }
+     }
+	  ret += '\n';
+     }
+     return ret;
+    
+}
 void draw_arena(std::string message=""){
     cls();
      for(size_t i=0; i < world.size(); i++)
@@ -103,6 +128,8 @@ void turn(){
       (*pTrace) << "TURN" << std::endl;
    niki_o = (niki_o +1) % MAX_ORIENTATION;
 }
+
+
 bool walkable(int y,int x){
   char ch = world[y][x];
   if (ch == ' ' || ch == '*' || ch == 'X')
@@ -217,14 +244,18 @@ int findlabel(std::string label)
    return -1;
 }
 std::vector<int> stack;
-
+#include "picojson.h"
 // the fetch loop (e.g., virtual machine)
 int vm(){
   int pc=0; // initialize at line 0
   int step_counter = 0;
   bool cpu_flag=false; // jumps depend on this
+  
   while(true)
   {
+    picojson::value::object o;
+    o["arena_before"] = picojson::value(serialize_arena());
+    o["step"] = picojson::value((double) step_counter); 
      // fetch a line
      if (pc < 0 || pc >= source.size()){
 	std::cout << "Program Counter (Line Pointer) outside source! Exit... (pc=" << pc <<")" << std::endl;
@@ -235,6 +266,7 @@ int vm(){
      #ifdef DEBUG
      std::cout << "Executing <" << line << ">" << std::endl;
      #endif
+     o["line"]=picojson::value(line);
      pc ++;
      if (line.rfind("CALL",0)==0){
        auto label = line.substr(5);
@@ -350,6 +382,10 @@ int vm(){
 	  exit (4);
      }
      draw_arena(message);
+     o["value"] = picojson::value(message);
+     o["arena"] = picojson::value(serialize_arena());
+     if (pJSONLog != NULL)
+       *pJSONLog << picojson::value(o) << std::endl;
      fflush(stdout);
      wait();
 
@@ -397,7 +433,7 @@ int main(int argc, char **argv)
   bool interactive = false;
  std::string filename(""),worldname("");
   char c;
-  while ((c = getopt (argc, argv, "if:w:t:l:")) != -1)
+  while ((c = getopt (argc, argv, "if:w:t:l:j:")) != -1)
     switch (c)
       {
       case 'l':
@@ -414,6 +450,9 @@ int main(int argc, char **argv)
         break;
       case 't':
         pTrace= new std::ofstream(optarg);
+	break;
+      case 'j':
+        pJSONLog= new std::ofstream(optarg);
 	break;
        
       case '?':
