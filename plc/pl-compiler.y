@@ -184,7 +184,7 @@ char *cg_while(char *exp, char *body){
    if (strcmp(exp, "true")== 0) { // special in pl1
        start_label = lno++;
        end_label = lno++;
-      snprintf(ret,len, "L%d:\n%sJMP L%d\nL%d:\n", start_label,body, start_label,end_label);
+       snprintf(ret,len, "L%d:\n%sJMP L%d\nL%d:\n", start_label,body, start_label,end_label);
    }else{
      // exp is code that evaluates and sets the CPU flags
      // as we do not have numbers in Niki, logical ops just need to store the result in the cpu flag
@@ -194,12 +194,14 @@ char *cg_while(char *exp, char *body){
       snprintf(ret,len, "L%d:\n%sJZ L%d\n%sJMP L%d\nL%d:\n", start_label,exp,end_label,body, start_label,end_label);
     }
 
+    fprintf(stderr,"While generates <%s>\n having %d and %d",ret, start_label, end_label);
    
    /*IF THERE IS A BREAK, replace it with JMP */
    char jumpcommand[15];
    char *ret2;
-   snprintf(jumpcommand,15,"JMP L%d",end_label);
+   snprintf(jumpcommand,15,"JMP L%d ",end_label);
    ret2 = str_replace(ret, "BREAK",jumpcommand);
+   
    free(ret);
    ret = ret2;
    /*IF THERE IS A CONT, replace it with JMP */
@@ -221,7 +223,8 @@ char *cg_if (char *exp, char *body){
    assert(exp!= NULL && body != NULL);
    int len=30+strlen(exp)+strlen(body);
    char *ret = malloc(len);
-   snprintf(ret,len,"%sJZ L%d\n%sL%d:\n",exp,lno++,body,lno);
+   int my_lno = lno++;
+   snprintf(ret,len,"%sJZ L%d\n%sL%d:\n",exp,my_lno,body,my_lno);
    return ret;
 }
 /*
@@ -276,7 +279,6 @@ Emit label, body, RET
 */
 char *cg_function(char *name, char *body)
 {
-     printf("Implemented CG_FUNCTION for name %s\n",name, body);
      int len = 20+strlen(name)+strlen(body);
      char *ret = malloc(len);
      snprintf(ret,len,"L%s:\n%sRET\n",name,body);
@@ -406,7 +408,7 @@ char temp[2]="t";
 
 int label[200];
 int lnum=0;
-int ltop=0;
+int ltop=0; //unused at the moment.
 int switch_stack[1000];
 int stop=0;
 char type[10];
@@ -427,6 +429,8 @@ extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 extern void yy_flush_buffer( YY_BUFFER_STATE buffer );
 extern void YY_FLUSH_BUFFER;
 void compile(char *source){
+    // reset some internals
+    lno = 0;
    // clean output (memory leaks!)
     final = _alloc(100);
    strcpy(final,"CALL Lmain\nHALT\n"); // boot loader

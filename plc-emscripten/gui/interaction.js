@@ -1,9 +1,50 @@
 /*
 Globals
 */
+
+var pllib={
+  "programs": {
+    "00-sequential.pl1": "void main(){\n  move();\n  turn();\n  eat();\n}\n",
+    "01-whiletrue-stmt.pl1": "void main(){\n  while(true)\n    move();\n}\n",
+    "02-whiletrue-stmts.pl1": "void main(){\n    while(true){\n    move();\n    turn();\n}\n  \n}\n",
+    "book10a.pl1": "/*\nTesting and Introducing IF ELSE\nTwo Blocks\n\n*/\n\nvoid main(){\n   if (front_blocked){\n     turn();\n   }else{\n     move();\n   }\n\n\n}",
+    "book10b.pl1": "/*\nTesting and Introducing IF ELSE\nTwo Blocks\n\n*/\n\nvoid main(){\n   if (front_blocked){\n     turn();\n   }else\n     move();\n   \n\n\n}",
+    "book10c.pl1": "/*\nTesting and Introducing IF ELSE\nTwo Blocks\n\n*/\n\nvoid main(){\n   if (front_blocked)\n     turn();\n   else\n     move();\n   \n\n\n}",
+    "book10d.pl1": "/*\nTesting and Introducing IF ELSE\nTwo Blocks\n\n*/\n\nvoid main(){\n   if (front_blocked)\n     turn();\n   else{\n     move();\n   }\n\n\n}",
+    "book11.pl1": "/*\nFunction call\n*/\n\nvoid turnleft(){\n  turn();\n  turn();\n  turn();\n}\n\nvoid main(){\n  turnleft();\n}\n",
+    "book12.pl1": "/*\n  Recursion\n*/\n\nvoid walk(){\n   if (front_blocked)\n   {\n\t// prepare for going back\n\tturn();\n\tturn();\n   }else{\n     move();\n     walk(); // function calls itself\n     move();\n   }\n}\n\n\nvoid main(){\n   // recursive loop\n   walk();\n}\n",
+    "book13.pl1": "/*\n Test return\n This now walks to the first wall \n*/\n\n\n\nvoid main(){\n   // recursive loop\n   move();\n   return;\n   move();\n}\n",
+    "book1.pl1": "/*\nFirst program. This is a multiline comment and can explain the code.\n\nIf you want to compile this program, you should invoke the\nPrecursor Language Compiler (plc) for example as follows:\n\nplc book1.pl1\n\n(c) 2024 M. Werner\n*/\n\nvoid main(){\n   move(); // this will move our robot.\n}\n",
+    "book2.pl1": "/*\nProgram to solve world book02.wrl\n\n(c) 2024 M. Werner\n*/\n\nvoid main(){\n   // look right\n   turn(); \n   // move to the wall\n   move();move();move();\n   // look down\n   turn();turn();turn();\n   // move to the wall\n   move();move();move();move();\n   // look left\n   turn();turn();turn();\n   // three steps left\n   move();move();move();\n}\n",
+    "book3.pl1": "/*\nConditional Execution - Breaking out of the loop\n\n(c) 2024 M. Werner\n*/\n\nvoid main(){\n  while (true){\n    if (front_blocked) {\n      break;\n      }\n    move();\n  }\n}\n",
+    "book4.pl1": "/*\nConditional Execution - Breaking out of the loop\n\n(c) 2024 M. Werner\n*/\n\nvoid main(){\n  while (true){\n    if (front_blocked) \n      break;\n    move();\n  }\n}\n",
+    "book5.pl1": "/*\n    Walks infinitely independent start\n    location.\n*/\nvoid main(){  \n  while (true){\n    if (front_blocked)\n    {\n       turn();\n       continue;  \n    }\n    move();\n  }\n}\n",
+    "book6.pl1": "/*\n  Walks until obstacle and picks all items\n  along the way\n*/\nvoid main(){\n   while(true)\n   {\n      if(has_item)\n        pick();\n      if (front_blocked)\n        break;\n      move();\n   }\n\n}\n",
+    "book7.pl1": "/*\n  Walks until obstacle and picks all items\n  along the way\n*/\nvoid main()\n{\n   // we assume to be bottom-left looking right!\n   while(true)  // go upwards\n   {\n      while(true) // this loop goes and eats to the right\n      {\n         if(has_item)\n           pick();\n         if (front_blocked)\n           break;\n         move();\n      }\n      // now, we should be right, looking right, all food eaten\n      turn();\n      // we are looking up, let us see if there is more work to do and a new\n      // scanline!\n      if (front_blocked)\n         break;\n      move();\n      \n      turn();\n      while(true){ // go back without eating\n        if (front_blocked)\n\t  break;\n\t  move();\n     }\n     // we should be now one line up, but entirely to the left. Let us look right\n     turn(); \n     turn();\n     }\n}\n",
+    "book8.pl1": "/*\nA conditional loop\n\n*/\nvoid main()\n{\n   // we assume to be bottom-left looking right!\n   while(front_blocked)  // go upwards\n   {\n     move();\n   }\n}\n",
+    "book9.pl1": "/*\nThe right-hand rule maze solver\n\nThis program is surprisingly powerful. When you are in a maze and you always take the\nrightmost possible way, you solve the maze. This is because the sequence of walls you walk along\nis a closed polygon and \n\n\n*/\nvoid main()\n{\n   // we assume to be bottom-left looking right!\n   while(true)  // go upwards\n   {\n      turn();turn();turn(); // look right\n      while (front_blocked)\n        turn();\n      move();\n   }\n}\n",
+    "test.pl1": "void main(){\n  move();\n  turn();\n  eat();\n}\n"
+  },
+  "worlds": {
+    "00-box14.wrl": "################\n#              #\n#              #\n#              #\n#       S      #\n#              #\n#              #\n#              #\n################\n",
+    "00-roman.wrl": "#################\r\n#      #        #\r\n# #### # ###### #\r\n# #    # ##   # #\r\n# # #### ## # # #\r\n# #      ## #   #\r\n# ######### #####\r\n# #X      #     #\r\n# ####### ##### #\r\n# #     #     # #\r\n# # ### ##### # #\r\n# #   # #     # #\r\n# ### # # ##### #\r\n#     # #       #\r\n#######N#########",
+    "book01.wrl": "##########\n#E       #\n######## #\n#        #\n# ########\n#        #\n######## #\n#        #\n# ########\n#       X#\n##########\n",
+    "book02.wrl": "##########\n#    S   #\n# ###### #\n# ###### #\n# ###### #\n#    X   #\n##########\n",
+    "book03.wrl": "##########\n#    S   #\n##########\n#    X   #\n##########\n",
+    "book04.wrl": "##############################\n#                            #\n#                            #\n#                            #\n#                            #\n#                            #\n#                            #\n#                            #\n#E  *  *       *          *  #\n#                            #\n#                            #\n#                            #\n#                            #\n#                            #\n#                            #\n##############################\n",
+    "book06.wrl": "##############################\n#                            #\n#                            #\n#                            #\n#                            #\n#                            #\n#                            #\n#                            #\n#E  *  *       *          *  #\n#                            #\n#                            #\n#                            #\n#                            #\n#                            #\n#                            #\n##############################\n",
+    "book07.wrl": "##############################\n#                            #\n#               *            #\n#    *                       #\n#       *   *          *     #\n#                            #\n#                            #\n#                            #\n#  ******  *   *   **   **   #\n#    *     *   *   * * * *   #\n#    *     *   *   *  *  *   #\n#    *     *   *   *     *   #\n#    *     ****    *     *   #\n#                            #\n#E                           #\n##############################\n",
+    "box2.wrl": "################\n#              #\n#              #\n#              #\n#              #\n#              #\n#              #\n#       W      #\n################\n",
+    "roman-closed.wrl": "#################\r\n#      #        #\r\n# #### # ###### #\r\n# #    # ##   # #\r\n# # #### ## # # #\r\n# #      ## #   #\r\n# ######### #####\r\n# #X      #     #\r\n# ####### ##### #\r\n# #     #     # #\r\n# # ### ##### # #\r\n# #   # #     # #\r\n# ### # # ##### #\r\n#     #N#       #\r\n#################\r\n",
+    "test.wrl": "#########################\n#                       #\n# ##################### #\n# #                   # #\n# #                   # #\n# #                   # #\n# #         *         # #\n# #                   # #\n# #                   # #\n# #                   # #\n# #########   ######### #\n#                       #\n#                       #\n#########################\n"
+  }
+};
+
+
 var world;
 var niki_x,niki_y,niki_o;
 var trace=[];
+var gTimeout=250; 
 /*Create an empty grid with a prefix and return it as a string*/
 function createGridHTML( r,  c,prefix="img")
   {
@@ -65,6 +106,7 @@ function setImageFromChar(prefix,r,c,ch){
 	  case 'E': rotate(image,0);   image.attr('src',"gfx/robot.png"); break;
 	  case 'W': rotate(image,180); image.attr('src',"gfx/robot.png"); break;
 	  case 'X':unrotate(image);   image.attr('src',"gfx/goal.png"); break;
+	  case '*':unrotate(image);   image.attr('src',"gfx/item.png"); break;
 	  default:  unrotate(image); image.attr('src',"gfx/empty.png"); break;
       }
 
@@ -136,13 +178,42 @@ function front_occupied(y,x,o)
 }
 
   function turn(){
-      if (niki_o == 'S') niki_o='W'
-      else if (niki_o == 'W') niki_o='N'
-      else if (niki_o == 'N') niki_o='E'
-      else if (niki_o == 'E') niki_o='S';
+      if (niki_o == 'S') niki_o='E'
+      else if (niki_o == 'E') niki_o='N'
+      else if (niki_o == 'N') niki_o='W'
+      else if (niki_o == 'W') niki_o='S';
       trace.push("TURN");
       updateGridFromGlobals("worldpreview-int");
   }
+function pick(){
+    trace.push("PICK");
+    if (world[niki_y][niki_x] == '*')
+    {
+	world[niki_y][niki_x]=' ';
+    }else{
+	vm_message = "Trying to pick an item on an empty place";
+	return false;
+    }
+    
+    updateGridFromGlobals("worldpreview-int");
+    return true;
+}
+
+function deposit(){
+    trace.push("DEPOSIT");
+    if (world[niki_y][niki_x] == ' ')
+    {
+	world[niki_y][niki_x]='*';
+    }else{
+	vm_message = "Trying to deposit an item on an non-empty place";
+	return false;
+    }
+    
+    updateGridFromGlobals("worldpreview-int");
+    return true;
+}
+
+
   function move(){
       if (niki_o == 'S') niki_y++;
       if (niki_o == 'N') niki_y--;
@@ -238,8 +309,10 @@ function getLabelRow(label){
 
 // async loop  VM
 function step(){
+    
     if (vm_state == "STOPPED")
     {
+	ui_stopped();
 	return; // any pending timeout after stop is ignored
     }
     
@@ -252,7 +325,7 @@ function step(){
     line = source[pc];
     console.log("Source Line: " + line);
     pc ++;
-    
+    $("#instruction").html(`${pc}: ${line}`);
     tokens = line.split(" "); 
 
     statemachine = {
@@ -270,7 +343,7 @@ function step(){
 	}, 
 	"HALT": function (t){
 	    vm_state="STOPPED"
-	    vm_message="Machine stopped from instruction HOLD on line " + pc.toString();
+	    vm_message="Machine stopped from instruction HALT on line " + pc.toString();
 	    return false; // stops machine?! make it more positive
 	},
 	"JMP": function(t) {
@@ -278,7 +351,7 @@ function step(){
 	    row = getLabelRow(t[1]+":")
 	    if (row < 0) {
 		vm_state="ABORTED";
-		vm_message="Machine tried to jump to non-existing label "+label;
+		vm_message="Machine tried to jump to non-existing label "+t[1];
 		return false;
 	    }else{
 		pc=row+1
@@ -319,6 +392,12 @@ function step(){
 	"LOADHI": function(t){
             cpu_flag=(world[niki_y][niki_x] == '*'); 
 	    return true;
+	},
+	"PICK": function(t){
+	    return pick();
+	},
+	"DEPOSIT": function(t){
+	    return deposit();
 	}
 	
     }
@@ -338,13 +417,15 @@ function step(){
 	 
 	if (state){
 	    // continue
-	    setTimeout(step,250);
+	    setTimeout(step,gTimeout);
 	}else{
 	    modalTextfieldMessage(`VM State: ${vm_state}<BR/>VM Message: ${vm_message}`);	    
 	    console.log("Check if failed or success or clean terminate");
 	}
     }else{
-	console.log("UNIMPLEMENTED; STILL CONTINUING FURTHER; SHOULD SET GLOBAL ERROR CONDITION OR CALL OUT");
+	modalTextfieldMessage(`Encountered an unknown assembly instruction: <BR/>Instruction: ${tokens[0]}`);
+	vm_state="stopped";
+
     }
 
 
@@ -393,10 +474,25 @@ function step(){
 
 }
 
+function ui_running(){
+    $("#btnRun").prop("disabled",true);
+    $("#btnShowTrace").prop("disabled",true);
+    $("#btnReset").prop("disabled",true);
+    $("#btnStop").prop("disabled",false);
+}
+function ui_stopped(){
+    $("#btnRun").prop("disabled",false);
+    $("#btnShowTrace").prop("disabled",false);
+    $("#btnReset").prop("disabled",false);
+    $("#btnStop").prop("disabled",true);
+
+}
+
 function vm_run()
 {
     // invalidate all traces
-    resetEnvironment();  
+    resetEnvironment();
+    ui_running();
     vm_state="RUNNING";
     source=$("#assembly").val().split("\n");
     stack=[];
@@ -412,25 +508,61 @@ function resetEnvironment(){
 	  onBtnShowWorld(); // load all grids and place niki
   
 }
+function loadLibrary(){
+    $("#dropdown_worlds").empty();
+    $("#dropdown_program").empty();
+    Object.keys(pllib.programs).forEach(function (e){
+	$("#dropdown_program").append(`<option value="${e}">${e}</option>`);
+    });
+    Object.keys(pllib.worlds).forEach(function (e){
+	$("#dropdown_worlds").append(`<option value="${e}">${e}</option>`);
+    });
+    
+}
+
+
 /*
 MAIN
 */
   $(document).ready(function (e) {
       console.log("ready");
+      loadLibrary();
+      
       $("#btnShowWorld").click(onBtnShowWorld);
     $("#btnCompile").click(do_compile); 
       $("#btnMove").click(interactive_move);
       $("#btnTurn").click(turn);
       $("#btnDismissMessage").click(hideMessage);
       $("#btnRun").click(vm_run);
+      $("#btnStop").click(function(){vm_state="STOPPED";ui_stopped();});
       $('#btnChangeViewAndRun').click(function(){
 	  document.getElementById('btnTabInteractive').click();
 	  vm_run();
       });
       $("#btnShowTrace").click(showTrace);
-      $("#btnRestart").click(function(){
+      $("#btnReset").click(function(){
 	  resetEnvironment();
       });
+      $("#btnPresetWorld").click(function(){
+	  world = $("#dropdown_worlds").val();
+	  world_src = pllib.worlds[world];
+	  console.log(world_src);
+	  $("#world").val(world_src);	  
+	  resetEnvironment();
+      });
+      $("#btnPresetProgram").click(function(){
+	  prg = $("#dropdown_program").val();
+	  prg_src = pllib.programs[prg];
+	  console.log(prg_src);
+	  $("#source").val(prg_src);	  
+	  resetEnvironment();
+      });
+
+      $("#selectSpeed").on('change', function(e){
+	  console.log($("#selectSpeed").val());
+	  gTimeout=$("#selectSpeed").val();
+      });
+      
       onBtnShowWorld(); // load default world
       hideMessage(); // enable user interface
 

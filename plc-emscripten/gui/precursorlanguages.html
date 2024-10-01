@@ -42,7 +42,7 @@ var Module = {
   <h2>Welcome</h2>
   <p>This application aims at teaching computational thinking and preparing to learn
     the language C based on ideas including, but not limited to NIKI and Karel the Robot.</p>
-
+ </p>
   <h3>Interactive Mode</h3>
   <ul>
     <li>Click on Interactive...</li>
@@ -67,7 +67,10 @@ var Module = {
 <div id="World" class="tabcontent">
   <h2>The World</h2>
   <p>In this tab, you can create a world for your robot or load one of the predefined ones.</p> 
-<div>
+  <div>
+
+      Worlds: <select id='dropdown_worlds'></select><button id='btnPresetWorld'>Load...</button><BR/>
+
 <textarea id="world" class="texteditor" >
 ##########
 #E       #
@@ -91,7 +94,9 @@ var Module = {
 <div id="Source" class="tabcontent">
   <h2>Source & Robot</h2>
   <p>In this tab, you can implement in the various precursor languages. For simplicity, we show the world of the robot as well.</p>
-<div>
+  Programs: <select id='dropdown_program'></select><button id='btnPresetProgram'>Load...</button><BR/>
+
+  <div>
 <textarea id="source" class="texteditor" >
 /*
 A right-hand rule maze solver
@@ -141,8 +146,15 @@ TURN
   <div class="header">
     <button id="btnRun">Run Program...</button>
     <button id="btnShowTrace">Show Trace...</button>
-    <button id="btnRestart">Restart...</button>
-    
+    <button id="btnReset">Reset Environment...</button>
+    <button id="btnStop">Stop...</button>
+    <select id="selectSpeed">
+      <option value="25">fast</option>
+      <option value="250" selected>normal</option>
+      <option value="500">slow</option>
+      <option value="1000">very slow</option>
+    </select><br/>
+    <div id="instruction">inner</div>
   </div>
   </p>
 <div id="world-interactive" class="worldcontainer fullwidth">

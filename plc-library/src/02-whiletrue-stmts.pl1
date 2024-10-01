@@ -1,7 +1,0 @@
-void main(){
-    while(true){
-    move();
-    turn();
-}
-  
-}

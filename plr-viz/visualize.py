@@ -2,7 +2,7 @@ import json
 import sys
 import numpy as np
 from imageio import imwrite, imread
-from skimage.transform import resize
+from skimage.transform import resize, rotate
 
 class cfg:
     tile=(128,128)
@@ -14,11 +14,11 @@ def get_sprites(path="../plc-emscripten/gui/gfx"):
         " ": imread("%s/empty.png"%(path)),
         "X": imread("%s/goal.png"%(path)),
         "*": imread("%s/item.png"%(path)),
-        "S": imread("%s/robot.png"%(path)),
         "E": imread("%s/robot.png"%(path)),
-        "W": imread("%s/robot.png"%(path)),
-        "N": imread("%s/robot.png"%(path)),
         }
+    sprites["N"] = rotate(sprites["E"], 90);
+    sprites["W"] = rotate(sprites["N"], 90);
+    sprites["S"] = rotate(sprites["W"], 90);
     for k in sprites:
         sprites[k] = resize(sprites[k], cfg.tile)
         sprites[k] = sprites[k][:,:,:3] #ignores alpha
@@ -57,4 +57,4 @@ if __name__=="__main__":
         print(s,gSprites[s].shape)
     for lno,line in enumerate(open(sys.argv[1],"r")):
         visualize(lno,line)
-        break
+        print(lno)

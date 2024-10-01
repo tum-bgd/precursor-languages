@@ -5,5 +5,11 @@ all:
 	cp gui/precursorlanguages.html gui/*.css gui/*.js /var/www/html
 	cp gui/gfx /var/www/html -R
 
+html: 
+	cp plc.js plc.wasm plc.html  /var/www/html
+	cp gui/precursorlanguages.html gui/*.css gui/*.js /var/www/html
+	cp gui/gfx /var/www/html -R
+
+
 clean:
 	rm -f plc.js plc.wasm plc.html
