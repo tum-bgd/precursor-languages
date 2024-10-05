@@ -238,7 +238,9 @@ function deposit(){
 
 function do_compile(){
     src = $('#source').val()
-    compiled = compile(src);
+    ll = $('#selectLL').val()
+    console.log("Language Level: ",ll);
+    compiled = compile(src,ll); // language level. todo set to 1
     if (compiled.startsWith("SYNTAX ERROR")){
 	alert(compiled);
     }else{
