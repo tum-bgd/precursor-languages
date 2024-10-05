@@ -20,9 +20,11 @@ extern int yylex (void);
  void yyrestart(FILE *);
 void yyerror(char *s);
  int yywrap(){return(1);} // we do only compile a single file.
-
+ 
 
 /* Globals*/
+
+int LL=2; // language level
 
 char *final=NULL;
 
@@ -39,7 +41,7 @@ A quick glance:
 
 MEMORY
 _alloc will allocate a new buffer and register it in a NULL slot in buffers
-_freeall will free all allocated buffers
+_gc will free all allocated buffers
 TODO: initialize buffers to be NULL and remove all malloc and free all over the place
 
 
@@ -48,19 +50,41 @@ TODO: initialize buffers to be NULL and remove all malloc and free all over the 
 */
 
 
+
+void gc(){
+  printf("GC start: %d buffers",buffer_top);
+  int fc = 0;
+  // garbage collection
+  while(buffer_top >0){
+     free(buffers[buffer_top -1]);
+     buffers[buffer_top -1] = NULL;
+     buffer_top --;
+     fc ++;
+  }
+  printf("Freed %d\n",fc);
+}
+
 char *_alloc(size_t n){
     char *ret = buffers[buffer_top++] = (char *) malloc(n);
     // TODO: abort out of mem in both pointers and...
-    printf("Allocated %zd slot %d", n, buffer_top-1);
+    //printf("Allocated %zd slot %d\n", n, buffer_top-1);
+    memset(ret,0,n);
     return ret;
 }
+
+char *_strdup(const char *str){
+  char *ret = _alloc(strlen(str) + 1);
+  strncpy(ret, str,strlen(str)+1);
+  return ret;
+}
+
 
 // replace needle with replacement in haystack, reallocating buffers as needed. reporting if new buffer
 char *_str_replace(char *haystack, char *needle, char *replacement, int *replaced){
     char *p=strstr(haystack, needle);
     if (p != NULL){
         int len = strlen(haystack) + strlen(replacement); // could be tighter, but we dont need it tight
-	char *ret = (char*) malloc(len);
+	char *ret = (char*) _alloc(len);
 	strncpy(ret,haystack, (int) (p - haystack));
 	strcat(ret,replacement);
 	strcat(ret,(char *) (p+strlen(needle)));
@@ -79,14 +103,14 @@ char *str_replace(char *haystack, char *needle, char *replacement){
     if (haystack == NULL || needle == NULL || replacement == NULL)
       return NULL;
     // create a working copy
-    char *working_copy = (char *) malloc(strlen(haystack) +1);
+    char *working_copy = (char *) _alloc(strlen(haystack) +1);
     strcpy(working_copy,haystack); 
     int replaced=1;
     while (replaced){
         char *p = _str_replace(working_copy, needle, replacement, &replaced);
 	if (replaced){
 	    // new buffer allocated, take ownership
-	    free(working_copy);
+	    
 	    working_copy = p; 
 	}
     }
@@ -111,10 +135,10 @@ Code Generation for Function Calls
 char *cg_call(char *name){
    assert(name != NULL);
    
-   char *ret = malloc(1024);
+   char *ret = _alloc(1024);
    if (strcmp(name, "move") == 0)
    {
-      snprintf(ret,10124,"MOVE\n");
+      snprintf(ret,1024,"MOVE\n");
    }else if (strcmp(name, "turn") == 0)
    {
       snprintf(ret,1024, "TURN\n");
@@ -127,6 +151,9 @@ char *cg_call(char *name){
    }else if (strcmp(name, "return") == 0)
    {
       snprintf(ret,1024, "RET\n");
+   }else if (strcmp(name, "exit") == 0)
+   {
+      snprintf(ret,1024, "HALT\n");
    }else
       snprintf(ret,1024, "CALL L%s\n", name);
    return ret;
@@ -141,7 +168,7 @@ Not much mroe than concatenate of assembly
 char *cg_sequential(char *left, char *right){
    assert(left != NULL && right != NULL);
    int len = strlen(left)+strlen(right)+1;
-   char *ret = malloc(len+1);
+   char *ret = _alloc(len+1);
    snprintf(ret,len, "%s%s", left,right);
    return ret;
 }
@@ -156,7 +183,7 @@ Emit LOADFB or LOADHI to read the two sensors.
 */
 
 char *cg_loadport(char *id){
-  char *ret = (char*)malloc(100);
+  char *ret = (char*)_alloc(100);
   if (strcmp(id, "front_blocked")== 0) { // special var  
       strncpy(ret, "LOADFB\n",100);
    }else if (strcmp(id, "has_item")== 0) { // special var  
@@ -180,34 +207,28 @@ char *cg_while(char *exp, char *body){
    assert(exp != NULL && body != NULL);
    int start_label,end_label;
    int len = 1024+strlen(exp)+strlen(body);
-   char *ret = malloc(len);
+   char *ret = _alloc(len);
    if (strcmp(exp, "true")== 0) { // special in pl1
        start_label = lno++;
        end_label = lno++;
        snprintf(ret,len, "L%d:\n%sJMP L%d\nL%d:\n", start_label,body, start_label,end_label);
    }else{
-     // exp is code that evaluates and sets the CPU flags
-     // as we do not have numbers in Niki, logical ops just need to store the result in the cpu flag
      // as we finally need to negate it for the jump, we should add a NOT, but we flip the jump
       start_label = lno++;
       end_label = lno++;
       snprintf(ret,len, "L%d:\n%sJZ L%d\n%sJMP L%d\nL%d:\n", start_label,exp,end_label,body, start_label,end_label);
     }
 
-    fprintf(stderr,"While generates <%s>\n having %d and %d",ret, start_label, end_label);
-   
    /*IF THERE IS A BREAK, replace it with JMP */
    char jumpcommand[15];
    char *ret2;
    snprintf(jumpcommand,15,"JMP L%d ",end_label);
    ret2 = str_replace(ret, "BREAK",jumpcommand);
    
-   free(ret);
    ret = ret2;
    /*IF THERE IS A CONT, replace it with JMP */
    snprintf(jumpcommand,15,"JMP L%d",start_label);
    ret2 = str_replace(ret, "CONT",jumpcommand);
-   free(ret);
    ret = ret2;
 
    return ret;
@@ -222,7 +243,7 @@ Executing the assembly of the expression loads one of the sensors...
 char *cg_if (char *exp, char *body){
    assert(exp!= NULL && body != NULL);
    int len=30+strlen(exp)+strlen(body);
-   char *ret = malloc(len);
+   char *ret = _alloc(len);
    int my_lno = lno++;
    snprintf(ret,len,"%sJZ L%d\n%sL%d:\n",exp,my_lno,body,my_lno);
    return ret;
@@ -248,7 +269,7 @@ char *cg_if_else (char *exp, char *body, char *elsecode){
    assert(exp!= NULL && body != NULL && elsecode != NULL);
    int len=60+strlen(exp)+strlen(body)+strlen(elsecode);
    
-   char *ret = malloc(len);
+   char *ret = _alloc(len);
    int label_else = lno++;
    int label_out = lno++;
    snprintf(ret,len,"%sJZ L%d\n%sJMP L%d\nL%d:\n%sL%d:\n",exp,label_else,body,label_out,label_else,elsecode,label_out );
@@ -264,12 +285,12 @@ void cg_append(char *s){
    int len = strlen(s)+10;
    if (final != NULL)
      len += strlen(final);
-   char *ret = (char *) malloc(len);
+   char *ret = (char *) _alloc(len);
    ret[0] = '\0'; // empty
    if (final != NULL)
      strcpy(ret, final);
    strcat(ret,s);
-   free(final);
+   
    final = ret; // new buffer
 }
 /*
@@ -279,9 +300,20 @@ Emit label, body, RET
 */
 char *cg_function(char *name, char *body)
 {
+     printf("cg_function body:%s\n",name);
      int len = 20+strlen(name)+strlen(body);
-     char *ret = malloc(len);
+     char *ret = _alloc(len);
+     if (LL==2){
      snprintf(ret,len,"L%s:\n%sRET\n",name,body);
+     }else{
+       if (strcmp(name, "main") != 0)
+       {
+	    yyerror("only main allowed in PL1");
+	    return NULL;
+       }
+       snprintf(ret,len,"%sHALT\n",body); // PL1 ends wih HALT
+       
+     }
      return ret;
 }
 
@@ -340,29 +372,29 @@ char *name;
 %%
 pgmstart                        : function          {cg_append($1);} |
                                   function pgmstart {cg_append($1);};
-function 			: TYPE ID '(' ')' STMTS { $$=cg_function($2,$5);}
+function 			: TYPE ID '(' ')' STMTS { $$=cg_function($2,$5); if ($$==NULL) YYABORT;}
 				;
 
 STMTS 	: '{' STMT1 '}'{$$=$2;} 
 				;
 STMT1			: STMT  STMT1 {$$=cg_sequential($1,$2);}
-				| {$$=strdup("");}
+				| {$$=_strdup("");}
 				;
 
 STMT 			:          STMT_IF {$$ = $1;}
 				 | STMT_WHILE {$$=$1;}
 				 | STMT_CALL {$$ = $1;}
-			         | BREAK ';' {$$=strdup("BREAK\n");}
-				 | RETURN ';' {$$=strdup("RET\n");}
-				 | CONTINUE ';' {$$=strdup("CONT\n");}
-				 | ';' {$$= strdup("");}
+			         | BREAK ';' {$$=_strdup("BREAK\n");}
+				 | RETURN ';' {$$=_strdup("RET\n");}
+				 | CONTINUE ';' {$$=_strdup("CONT\n");}
+				 | ';' {$$= _strdup("");}
 				;
 
 				
 
 EXP 			:     ID {$$ = cg_loadport($1);} |
-                              TRUE {$$=strdup("true");}  
-			      | FALSE {$$=strdup("false");};
+                              TRUE {$$=_strdup("true");}  
+			      | FALSE {$$=_strdup("false");};
 				;
 
 
@@ -428,20 +460,30 @@ extern YY_BUFFER_STATE yy_scan_string(char * str);
 extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 extern void yy_flush_buffer( YY_BUFFER_STATE buffer );
 extern void YY_FLUSH_BUFFER;
-void compile(char *source){
+void compile(char *source, int _ll){
     // reset some internals
+    LL = _ll; //set language level
     lno = 0;
+    
    // clean output (memory leaks!)
     final = _alloc(100);
-   strcpy(final,"CALL Lmain\nHALT\n"); // boot loader
+    printf("Language Level of Compiler: %d\n" , LL);
+    strcpy(final,"");
+    if (LL==2)
+       strcpy(final,"CALL Lmain\nHALT\n"); // boot loader
    /*Parsing String*/
     yyrestart(NULL);
 //    yy_flush_buffer( YY_CURRENT_BUFFER ); // discard what we have
     YY_FLUSH_BUFFER;
-    printf("Debugging: source=<%s>",source);
+    
     YY_BUFFER_STATE buffer = yy_scan_string(source);
     yyparse();
     yy_delete_buffer(buffer);
+    // forward the final
+    char *p = malloc(strlen(final)+1);
+    strncpy(p,final,strlen(final)+1);
+    final = p;
+    gc(); // clear buffers
 }
 
 void yyerror(char *s)
@@ -464,8 +506,10 @@ int main(int argc, char *argv[])
         }
 
 	// prepare the final with a boot loader
-	final = malloc(100);
-	strcpy(final,"CALL Lmain\nHALT\n"); // boot loader
+	final = _alloc(100);
+	strcpy(final,"");
+	if (LL==2)
+	    strcpy(final,"CALL Lmain\nHALT\n"); // boot loader
 	
        if(!yyparse())
 		printf("\nParsing complete\n");
@@ -473,8 +517,10 @@ int main(int argc, char *argv[])
 	{
 		printf("\nParsing failed\n");
 		exit(0);
-
 	}
+	
+
+	
 	// Enter Linker Stage: we do not link together multiple files, but we should do the minimum
 	// sanity check of linkers:
 	/*
@@ -504,6 +550,7 @@ int main(int argc, char *argv[])
 	  }
 	
 	fclose(yyin);
+	gc(); // garbage
     return 0;
 }
 void yyerror(char *s)

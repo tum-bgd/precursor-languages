@@ -5,6 +5,9 @@ changes: 2024 M.Werner
 */
 %{
 #include "pl-compiler.tab.h"
+
+char *_strdup(const char *);
+
 %}
 alpha [a-zA-Z]
 digit [0-9]
@@ -22,13 +25,13 @@ digit [0-9]
 "while"	return WHILE;
 "switch"	return SWITCH;
 "default" return DEFAULT;
-"true"	{yylval.name = strdup("true");return TRUE;}
+"true"	{yylval.name = _strdup("true");return TRUE;}
 "false"	return FALSE;
 "if"	return IF;
 "else"	return ELSE;
 ^"#include ".+ ;
 {digit}+       return NUM;
-{alpha}({alpha}|{digit}|[_])* {yylval.name = strdup(yytext); return ID;};
+{alpha}({alpha}|{digit}|[_])* {yylval.name = _strdup(yytext); return ID;};
 "="     return ASGN;
 "<="    return LE;
 ">="    return GE;
