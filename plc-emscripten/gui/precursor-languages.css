@@ -80,10 +80,11 @@ body {font-family: Arial;}
 .worldcontainer {
     margin-left:auto;
     margin-right:auto;
-    width: 30%;
+    width: 50%;
     aspect-ratio : 1 / 1;
     overflow: hide;
 }
+
 .large {
     width:70%;
 }
@@ -104,4 +105,9 @@ body {font-family: Arial;}
     background: #DDDDDD;
     padding:5px;
     
+}
+
+textarea  
+{  
+   font-family:"Courier New";  
 }

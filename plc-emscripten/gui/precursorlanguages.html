@@ -31,10 +31,10 @@ var Module = {
 
 <div class="tab">
   <button class="tablinks" onclick="openCity(event, 'Welcome')" id="defaultOpen">Welcome</button>
-  <button class="tablinks" onclick="openCity(event, 'World')">The World Editor</button>
-  <button class="tablinks" onclick="openCity(event, 'Source')">Source Code & Robot</button>
-  <button class="tablinks" onclick="openCity(event, 'Machine')" id="btnTabMachineCode">Machine Code & Robot</button>
-  <button class="tablinks" onclick="openCity(event, 'Robot')" id="btnTabInteractive">Interactive Robot</button>
+  <button class="tablinks" onclick="openCity(event, 'World')">World Editor</button>
+  <button class="tablinks" onclick="openCity(event, 'Source')">Source Code</button>
+  <button class="tablinks" onclick="openCity(event, 'Machine')" id="btnTabMachineCode">Machine Code </button>
+  <button class="tablinks" onclick="openCity(event, 'Robot')" id="btnTabInteractive">Robot</button>
   
 </div>
 
@@ -43,20 +43,30 @@ var Module = {
   <p>This application aims at teaching computational thinking and preparing to learn
     the language C based on ideas including, but not limited to NIKI and Karel the Robot.</p>
  </p>
-  <h3>Interactive Mode</h3>
+  <h3>Some Hints...</h3>
   <ul>
-    <li>Click on Interactive...</li>
-    <li>If wanted, modify and load the world in The World...</li>
+    <li>First, you can define or load a world in the tab The World Editor</li>
+    <li>Then, you can write and compile programs in the Source Code Tab</li>
+    <li>You can inspect, write, and modify the resulting machine code in the Machine Code tab</li>
+    <li>You can run the robot program in the tab Robot</li>
+    <li>The robot tab allows you to steer the robot manually as well</li>
   </ul>
-  <h3>Programming Mode</h3>
-  <ul>
-    <li>First, open the tab "The World" and load a world for our robot.</li>
-    <li>Then, you will be on the tab "The Robot" and can steer the robot with its two operations.</li>
-  </ul>
-  <h3>Educational Material</h3>
-  <ul>
-    <li>Educational material (lectures, tasks, tutorials,...) are in preparation and presented as part of Computational Foundations at Technical University of Munich</li>
-    </ul>
+  <h3>Settings</h3>
+<p>
+  <form id="settings">
+    <label for="cfgFontSize">Font Size: </label>
+    <select id="cfgFontSize"><option value=0 selected>Auto</option>
+    <option value=24>Large (24)</option>
+    <option value=48>Huge (48)</option>
+  </select><br/>
+  <label for="cfgWorldSize">World Size: </label>
+  <select id="cfgWorldSize">
+    <option value="30%" selected>30%</option>
+    <option value="50%">50%</option>
+    <option value="100%">100%</option>
+  </select>
+  
+</form>  </p>
   <h3>Code Documentation & Contribution</h3>
   <ul>
     <li>... will become possible on github: <a href="https://github.com/tum-bgd/precursor-languages">https://github.com/tum-bgd/precursor-languages</a></li>
@@ -70,8 +80,7 @@ var Module = {
   <div>
 
       Worlds: <select id='dropdown_worlds'></select><button id='btnPresetWorld'>Load...</button><BR/>
-
-<textarea id="world" class="texteditor" >
+<textarea id="world" class="texteditor" spellcheck="false" >
 ##########
 #E       #
 ######## #
@@ -97,7 +106,7 @@ var Module = {
   Programs: <select id='dropdown_program'></select><button id='btnPresetProgram'>Load...</button><BR/>
 
   <div>
-<textarea id="source" class="texteditor" >
+<textarea id="source" class="texteditor" spellcheck="false" >
 /*
 A right-hand rule maze solver
 
@@ -106,10 +115,9 @@ rightmost possible way, you solve the maze.
 */
 void main()
 {
-   // we assume to be bottom-left looking right!
-   while(true)  // go upwards
+   while(true)  
    {
-      turn();turn();turn(); // look right
+      turn();turn();turn(); 
       while (front_blocked)
         turn();
       move();
@@ -130,9 +138,24 @@ void main()
   <h2>Machine Code & Robot</h2>
   <p>This tab allows you to inspect and edit the machine code to run on the robot and run the machine code.</p>
   <div>
-<textarea id="assembly" class="texteditor" >
-MOVE
+<textarea id="assembly" class="texteditor" spellcheck="false" >
+CALL Lmain
+HALT
+Lmain:
+L2:
 TURN
+TURN
+TURN
+L0:
+LOADFB
+JZ L1
+TURN
+JMP L0
+L1:
+MOVE
+JMP L2
+L3:
+RET
 </textarea>
 <button id="btnChangeViewAndRun">Run...</button>
 <div id="worldpreview-assembly" class="worldcontainer">

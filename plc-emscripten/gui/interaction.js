@@ -48,7 +48,6 @@ var gTimeout=250;
 /*Create an empty grid with a prefix and return it as a string*/
 function createGridHTML( r,  c,prefix="img")
   {
-      console.log(r,c)
       p = (100 / c); 
       q = (100 / r); 
       if (q<p) p = q; // we always scale squares on width 
@@ -323,9 +322,8 @@ function step(){
 	 modalTextfieldMessage("Program Counter (Line Pointer) outside source! Exit... (pc=" + pc.toString() +  ")");
 	return step_counter;
      }
-    console.log("PC="+pc.toString());
     line = source[pc];
-    console.log("Source Line: " + line);
+    console.log("@"+pc.toString() + ":" + line );
     pc ++;
     $("#instruction").html(`${pc}: ${line}`);
     tokens = line.split(" "); 
@@ -349,7 +347,7 @@ function step(){
 	    return false; // stops machine?! make it more positive
 	},
 	"JMP": function(t) {
-	    console.log(`In JMP with ${t}`);
+	    //console.log(`In JMP with ${t}`);
 	    row = getLabelRow(t[1]+":")
 	    if (row < 0) {
 		vm_state="ABORTED";
@@ -365,7 +363,7 @@ function step(){
 	    return true;
 	},
 	"JZ": function(t){
-	    console.log(`JZ with flag ${cpu_flag}`);
+	    //console.log(`JZ with flag ${cpu_flag}`);
 	    if (!cpu_flag) return statemachine["JMP"](t);
 	    return true;
 	},
@@ -383,7 +381,7 @@ function step(){
 	},
 	"RET": function(t){
 	    lno = stack.pop();
-	    console.log(`RET TO ${lno}`)
+	    //console.log(`RET TO ${lno}`)
 	    pc = lno;
 	    return true; // TODO: detect and catch stack underflow and overflow
 	},
@@ -406,14 +404,14 @@ function step(){
 
     // labels are ignored.
     if (tokens[0].endsWith(":")){
-	console.log("Label detected: "+line);
+	//console.log("Label detected: "+line);
 	setTimeout(step,0); // no delay
 	
 	return;
     }
     // all other must be valid instructions
     if (tokens[0] in statemachine){
-	console.log("Detected " + tokens[0]);
+	//console.log("Detected " + tokens[0]);
 	state = statemachine[tokens[0]](tokens);
         step_counter ++;
 	 
@@ -421,8 +419,7 @@ function step(){
 	    // continue
 	    setTimeout(step,gTimeout);
 	}else{
-	    modalTextfieldMessage(`VM State: ${vm_state}<BR/>VM Message: ${vm_message}`);	    
-	    console.log("Check if failed or success or clean terminate");
+	    modalTextfieldMessage(`VM State: ${vm_state}<BR/>VM Message: ${vm_message}`);	   
 	}
     }else{
 	modalTextfieldMessage(`Encountered an unknown assembly instruction: <BR/>Instruction: ${tokens[0]}`);
@@ -501,7 +498,7 @@ function vm_run()
     pc=0;
     step_counter=0;
     cpu_flag=false;
-    console.log(source);
+    //console.log(source);
     step();
 }
 
@@ -527,7 +524,6 @@ function loadLibrary(){
 MAIN
 */
   $(document).ready(function (e) {
-      console.log("ready");
       loadLibrary();
       
       $("#btnShowWorld").click(onBtnShowWorld);
@@ -548,22 +544,36 @@ MAIN
       $("#btnPresetWorld").click(function(){
 	  world = $("#dropdown_worlds").val();
 	  world_src = pllib.worlds[world];
-	  console.log(world_src);
+	  
 	  $("#world").val(world_src);	  
 	  resetEnvironment();
       });
       $("#btnPresetProgram").click(function(){
 	  prg = $("#dropdown_program").val();
 	  prg_src = pllib.programs[prg];
-	  console.log(prg_src);
 	  $("#source").val(prg_src);	  
 	  resetEnvironment();
       });
 
       $("#selectSpeed").on('change', function(e){
-	  console.log($("#selectSpeed").val());
 	  gTimeout=$("#selectSpeed").val();
       });
+      $("#cfgFontSize").on('change', function(e){
+	  fs = $("#cfgFontSize").val();
+	  fs = Number(fs);
+	  if (fs == 0){
+	      $("textarea").css({"font-size":"initial"});
+	  }else{
+	      $("textarea").css({"font-size":fs});
+	  }
+	  
+      });
+      $("#cfgWorldSize").on('change', function(e){
+	  ws = $("#cfgWorldSize").val();
+	  console.log("World Size: ",ws);
+	  $(".worldcontainer").css({"width":ws});
+      });
+
       
       onBtnShowWorld(); // load default world
       hideMessage(); // enable user interface
