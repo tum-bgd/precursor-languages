@@ -573,6 +573,23 @@ MAIN
 	  console.log("World Size: ",ws);
 	  $(".worldcontainer").css({"width":ws});
       });
+      $("#source").on('keydown', function(e) {
+        if (e.keyCode === 9) { // Tab key pressed
+        e.preventDefault(); 
+
+        var $this = $(this);
+        var start = this.selectionStart;
+        var end = this.selectionEnd;
+        
+        // Use the native DOM method setRangeText for efficient insertion
+        this.setRangeText(
+            '    ', // Tab with 4 spaces
+            start,            
+            end,              
+            'end'             
+                );
+            }
+        });
 
       
       onBtnShowWorld(); // load default world
